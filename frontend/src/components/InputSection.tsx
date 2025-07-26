@@ -28,8 +28,12 @@ import FileUpload from "@/components/ui/file-upload";
 import { SUPPORTED_FILE_TYPES } from "@/lib/constants";
 import type { useFileUpload } from "@/hooks/useFileUpload";
 import type { useProcessing } from "@/hooks/useProcessing";
+import type { ProcessingResults } from "@/lib/types";
+import ResultsSection from "@/components/ResultsSection";
 
-type InputSectionProps = ReturnType<typeof useFileUpload> & ReturnType<typeof useProcessing>;
+type InputSectionProps = ReturnType<typeof useFileUpload> &
+  ReturnType<typeof useProcessing> &
+  { results: ProcessingResults | null };
 
 const InputSection: React.FC<InputSectionProps> = ({
   uploadedFiles,
@@ -49,6 +53,7 @@ const InputSection: React.FC<InputSectionProps> = ({
   generateMindmapMutation,
   generateQuizMutation,
   generateFlashcardsMutation,
+  results,
 }) => {
   const [activeTab, setActiveTab] = useState("summary");
   const [textInput, setTextInput] = useState("");
@@ -318,6 +323,10 @@ const InputSection: React.FC<InputSectionProps> = ({
                     <BookOpen className="h-4 w-4" />
                     Flashcards
                   </TabsTrigger>
+                  <TabsTrigger value="results" className="flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    Results
+                  </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="summary" className="space-y-4">
@@ -414,6 +423,10 @@ const InputSection: React.FC<InputSectionProps> = ({
                       Create Flashcards
                     </Button>
                   </div>
+                </TabsContent>
+
+                <TabsContent value="results">
+                  <ResultsSection results={results} />
                 </TabsContent>
               </Tabs>
             </div>

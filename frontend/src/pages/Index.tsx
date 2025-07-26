@@ -1,7 +1,6 @@
 import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
 import InputSection from "@/components/InputSection";
-import ResultsSection from "@/components/ResultsSection";
 import { useFileUpload } from "@/hooks/useFileUpload";
 import { useProcessing } from "@/hooks/useProcessing";
 import { useEffect } from "react";
@@ -19,8 +18,7 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <Header />
       <HeroSection />
-      <InputSection {...fileUpload} {...processing} />
-      <ResultsSection results={processing.results} />
+      <InputSection {...fileUpload} {...processing} results={processing.results} />
     </div>
   );
 };
