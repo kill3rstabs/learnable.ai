@@ -10,6 +10,7 @@ import { useState, useEffect } from "react";
 
 interface ResultsSectionProps {
   results?: ProcessingResults | null;
+  activeTab: string;
 }
 
 // Quiz state interface
@@ -65,7 +66,7 @@ const MarkdownRenderer: React.FC<{ content: string }> = ({ content }) => {
   );
 };
 
-const ResultsSection: React.FC<ResultsSectionProps> = ({ results }) => {
+const ResultsSection: React.FC<ResultsSectionProps> = ({ results, activeTab }) => {
   const { toast } = useToast();
   const [quizState, setQuizState] = useState<QuizState>({
     currentQuestion: 0,
@@ -197,24 +198,12 @@ const ResultsSection: React.FC<ResultsSectionProps> = ({ results }) => {
         </div>
 
         <div className="max-w-6xl mx-auto">
-          <Tabs defaultValue="summary" className="w-full">
-            <TabsList className="grid w-full grid-cols-4 mb-8">
-              <TabsTrigger value="summary" className="flex items-center gap-2">
-                <FileText className="h-4 w-4" />
-                Summary
-              </TabsTrigger>
-              <TabsTrigger value="quiz" className="flex items-center gap-2">
-                <HelpCircle className="h-4 w-4" />
-                Quiz
-              </TabsTrigger>
-              <TabsTrigger value="flashcards" className="flex items-center gap-2">
-                <BookOpen className="h-4 w-4" />
-                Flashcards
-              </TabsTrigger>
-              <TabsTrigger value="mindmap" className="flex items-center gap-2">
-                <Brain className="h-4 w-4" />
-                Mind Map
-              </TabsTrigger>
+          <Tabs defaultValue={activeTab} className="w-full">
+            <TabsList className="hidden">
+              <TabsTrigger value="summary">Summary</TabsTrigger>
+              <TabsTrigger value="quiz">Quiz</TabsTrigger>
+              <TabsTrigger value="flashcards">Flashcards</TabsTrigger>
+              <TabsTrigger value="mindmap">Mind Map</TabsTrigger>
             </TabsList>
 
             <TabsContent value="summary">

@@ -161,6 +161,22 @@ const InputSection: React.FC<InputSectionProps> = ({
     }
   };
 
+  const hasResultsForTab = () => {
+    if (!results) return false;
+    switch (activeTab) {
+      case "summary":
+        return !!results.summary;
+      case "mindmap":
+        return !!results.mindmap;
+      case "quiz":
+        return !!results.quiz;
+      case "flashcards":
+        return !!results.flashcards;
+      default:
+        return false;
+    }
+  };
+
   // Get loading state for current tab
   const getLoadingState = () => {
     switch (activeTab) {
@@ -323,111 +339,120 @@ const InputSection: React.FC<InputSectionProps> = ({
                     <BookOpen className="h-4 w-4" />
                     Flashcards
                   </TabsTrigger>
-                  <TabsTrigger value="results" className="flex items-center gap-2">
-                    <FileText className="h-4 w-4" />
-                    Results
-                  </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="summary" className="space-y-4">
-                  <div className="text-center p-8">
-                    <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                    <h4 className="text-lg font-semibold mb-2">Generate Summary</h4>
-                    <p className="text-sm text-muted-foreground mb-6">
-                      Create a concise summary of your content with key points and insights.
-                    </p>
-                    <Button
-                      variant="hero"
-                      size="lg"
-                      onClick={handleGenerateContent}
-                      disabled={!hasApiKey || isProcessing || !hasContent() || getLoadingState()}
-                      className="w-full"
-                    >
-                      {getLoadingState() ? (
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      ) : (
-                        <FileText className="h-4 w-4 mr-2" />
-                      )}
-                      Generate Summary
-                    </Button>
-                  </div>
+                  {hasResultsForTab() ? (
+                    <ResultsSection results={results} activeTab="summary" />
+                  ) : (
+                    <div className="text-center p-8">
+                      <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                      <h4 className="text-lg font-semibold mb-2">Generate Summary</h4>
+                      <p className="text-sm text-muted-foreground mb-6">
+                        Create a concise summary of your content with key points and insights.
+                      </p>
+                      <Button
+                        variant="hero"
+                        size="lg"
+                        onClick={handleGenerateContent}
+                        disabled={!hasApiKey || isProcessing || !hasContent() || getLoadingState()}
+                        className="w-full"
+                      >
+                        {getLoadingState() ? (
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        ) : (
+                          <FileText className="h-4 w-4 mr-2" />
+                        )}
+                        Generate Summary
+                      </Button>
+                    </div>
+                  )}
                 </TabsContent>
 
                 <TabsContent value="mindmap" className="space-y-4">
-                  <div className="text-center p-8">
-                    <Brain className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                    <h4 className="text-lg font-semibold mb-2">Create Mindmap</h4>
-                    <p className="text-sm text-muted-foreground mb-6">
-                      Visualize the main concepts and their relationships in your content.
-                    </p>
-                    <Button
-                      variant="hero"
-                      size="lg"
-                      onClick={handleGenerateContent}
-                      disabled={!hasApiKey || isProcessing || !hasContent() || getLoadingState()}
-                      className="w-full"
-                    >
-                      {getLoadingState() ? (
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      ) : (
-                        <Brain className="h-4 w-4 mr-2" />
-                      )}
-                      Create Mindmap
-                    </Button>
-                  </div>
+                  {hasResultsForTab() ? (
+                    <ResultsSection results={results} activeTab="mindmap" />
+                  ) : (
+                    <div className="text-center p-8">
+                      <Brain className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                      <h4 className="text-lg font-semibold mb-2">Create Mindmap</h4>
+                      <p className="text-sm text-muted-foreground mb-6">
+                        Visualize the main concepts and their relationships in your content.
+                      </p>
+                      <Button
+                        variant="hero"
+                        size="lg"
+                        onClick={handleGenerateContent}
+                        disabled={!hasApiKey || isProcessing || !hasContent() || getLoadingState()}
+                        className="w-full"
+                      >
+                        {getLoadingState() ? (
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        ) : (
+                          <Brain className="h-4 w-4 mr-2" />
+                        )}
+                        Create Mindmap
+                      </Button>
+                    </div>
+                  )}
                 </TabsContent>
 
                 <TabsContent value="quiz" className="space-y-4">
-                  <div className="text-center p-8">
-                    <HelpCircle className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                    <h4 className="text-lg font-semibold mb-2">Generate Quiz</h4>
-                    <p className="text-sm text-muted-foreground mb-6">
-                      Test your knowledge with interactive multiple-choice questions.
-                    </p>
-                    <Button
-                      variant="hero"
-                      size="lg"
-                      onClick={handleGenerateContent}
-                      disabled={!hasApiKey || isProcessing || !hasContent() || getLoadingState()}
-                      className="w-full"
-                    >
-                      {getLoadingState() ? (
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      ) : (
-                        <HelpCircle className="h-4 w-4 mr-2" />
-                      )}
-                      Generate Quiz
-                    </Button>
-                  </div>
+                  {hasResultsForTab() ? (
+                    <ResultsSection results={results} activeTab="quiz" />
+                  ) : (
+                    <div className="text-center p-8">
+                      <HelpCircle className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                      <h4 className="text-lg font-semibold mb-2">Generate Quiz</h4>
+                      <p className="text-sm text-muted-foreground mb-6">
+                        Test your knowledge with interactive multiple-choice questions.
+                      </p>
+                      <Button
+                        variant="hero"
+                        size="lg"
+                        onClick={handleGenerateContent}
+                        disabled={!hasApiKey || isProcessing || !hasContent() || getLoadingState()}
+                        className="w-full"
+                      >
+                        {getLoadingState() ? (
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        ) : (
+                          <HelpCircle className="h-4 w-4 mr-2" />
+                        )}
+                        Generate Quiz
+                      </Button>
+                    </div>
+                  )}
                 </TabsContent>
 
                 <TabsContent value="flashcards" className="space-y-4">
-                  <div className="text-center p-8">
-                    <BookOpen className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                    <h4 className="text-lg font-semibold mb-2">Create Flashcards</h4>
-                    <p className="text-sm text-muted-foreground mb-6">
-                      Build study cards with key terms and concepts for effective memorization.
-                    </p>
-                    <Button
-                      variant="hero"
-                      size="lg"
-                      onClick={handleGenerateContent}
-                      disabled={!hasApiKey || isProcessing || !hasContent() || getLoadingState()}
-                      className="w-full"
-                    >
-                      {getLoadingState() ? (
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      ) : (
-                        <BookOpen className="h-4 w-4 mr-2" />
-                      )}
-                      Create Flashcards
-                    </Button>
-                  </div>
+                  {hasResultsForTab() ? (
+                    <ResultsSection results={results} activeTab="flashcards" />
+                  ) : (
+                    <div className="text-center p-8">
+                      <BookOpen className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                      <h4 className="text-lg font-semibold mb-2">Create Flashcards</h4>
+                      <p className="text-sm text-muted-foreground mb-6">
+                        Build study cards with key terms and concepts for effective memorization.
+                      </p>
+                      <Button
+                        variant="hero"
+                        size="lg"
+                        onClick={handleGenerateContent}
+                        disabled={!hasApiKey || isProcessing || !hasContent() || getLoadingState()}
+                        className="w-full"
+                      >
+                        {getLoadingState() ? (
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        ) : (
+                          <BookOpen className="h-4 w-4 mr-2" />
+                        )}
+                        Create Flashcards
+                      </Button>
+                    </div>
+                  )}
                 </TabsContent>
 
-                <TabsContent value="results">
-                  <ResultsSection results={results} />
-                </TabsContent>
               </Tabs>
             </div>
 
