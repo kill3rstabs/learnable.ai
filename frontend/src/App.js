@@ -15,7 +15,7 @@ function App() {
           target="_blank"
           rel="noopener noreferrer"
         >
-          Learn React with Nashit
+          Learn React with Nashit and Haris
         </a>
       </header>
     </div>
