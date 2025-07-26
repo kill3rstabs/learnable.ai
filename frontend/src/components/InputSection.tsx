@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -8,12 +8,31 @@ import { Label } from "@/components/ui/label";
 import { Upload, Link, Type, Play, FileText, AlertTriangle, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useApiKey } from "@/hooks/useApiKey";
-import { useFileUpload } from "@/hooks/useFileUpload";
-import { useProcessing } from "@/hooks/useProcessing";
 import FileUpload from "@/components/ui/file-upload";
 import { SUPPORTED_FILE_TYPES } from "@/lib/constants";
+import type { useFileUpload } from "@/hooks/useFileUpload";
+import type { useProcessing } from "@/hooks/useProcessing";
 
-const InputSection = () => {
+type InputSectionProps = ReturnType<typeof useFileUpload> & ReturnType<typeof useProcessing>;
+
+const InputSection: React.FC<InputSectionProps> = ({
+  uploadedFiles,
+  isDragOver,
+  fileInputRef,
+  handleFileSelect,
+  handleDragOver,
+  handleDragLeave,
+  handleDrop,
+  handleFileInputChange,
+  removeFile,
+  clearFiles,
+  processingStatus,
+  summarizeTextMutation,
+  processMultimediaMutation,
+  summarizeMultimediaMutation,
+  generateMindmapMutation,
+  generateQuizMutation,
+}) => {
   const [activeTab, setActiveTab] = useState("text");
   const [textInput, setTextInput] = useState("");
   const [urlInput, setUrlInput] = useState("");
@@ -21,31 +40,6 @@ const InputSection = () => {
   
   // Custom hooks
   const { hasApiKey, validateApiKey } = useApiKey();
-  const {
-    uploadedFiles,
-    isDragOver,
-    fileInputRef,
-    handleFileSelect,
-    handleDragOver,
-    handleDragLeave,
-    handleDrop,
-    handleFileInputChange,
-    removeFile,
-    clearFiles,
-    getFilesByType,
-  } = useFileUpload();
-  
-  const {
-    processingStatus,
-    results,
-    resetProcessing,
-    summarizeTextMutation,
-    processMultimediaMutation,
-    summarizeMultimediaMutation,
-    generateMindmapMutation,
-    generateQuizMutation,
-    generateFlashcardsMutation,
-  } = useProcessing(uploadedFiles);
 
   // Handle text processing
   const handleTextProcess = () => {
