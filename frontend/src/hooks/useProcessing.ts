@@ -62,14 +62,20 @@ export const useProcessing = (uploadedFiles: UploadedFile[] = []) => {
       return apiClient.summarizeText(input);
     },
     onSuccess: (data) => {
-      setResults(prev => ({
-        ...prev,
-        summary: data,
-        content_type: 'text',
-      }));
+      console.log('summarizeTextMutation success:', data);
+      setResults(prev => {
+        const newResults = {
+          ...prev,
+          summary: data,
+          content_type: 'text',
+        };
+        console.log('Setting new results:', newResults);
+        return newResults;
+      });
       updateStatus(PROCESSING_STATES.SUCCESS, 100, 'Summary generated successfully!');
     },
     onError: (error: Error) => {
+      console.error('summarizeTextMutation error:', error);
       updateStatus(PROCESSING_STATES.ERROR, 0, '', error.message);
     },
   });
@@ -152,11 +158,16 @@ export const useProcessing = (uploadedFiles: UploadedFile[] = []) => {
       );
     },
     onSuccess: (data) => {
-      setResults(prev => ({
-        ...prev,
-        summary: data,
-        content_type: data.content_type,
-      }));
+      console.log('summarizeMultimediaMutation success:', data);
+      setResults(prev => {
+        const newResults = {
+          ...prev,
+          summary: data,
+          content_type: data.content_type,
+        };
+        console.log('Setting new results from multimedia:', newResults);
+        return newResults;
+      });
       updateStatus(PROCESSING_STATES.SUCCESS, 100, 'Summary generated successfully!');
     },
     onError: (error: Error) => {

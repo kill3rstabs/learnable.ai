@@ -74,6 +74,14 @@ const ResultsSection: React.FC<ResultsSectionProps> = ({ results }) => {
     score: 0,
   });
 
+  // Debug logging
+  useEffect(() => {
+    console.log('ResultsSection received results:', results);
+    if (results?.summary) {
+      console.log('Summary data:', results.summary);
+    }
+  }, [results]);
+
   // Initialize quiz state when results change
   useEffect(() => {
     if (results?.quiz?.quiz) {
@@ -153,6 +161,24 @@ const ResultsSection: React.FC<ResultsSectionProps> = ({ results }) => {
             <h2 className="text-3xl font-bold mb-4 text-foreground">Your Learning Resources</h2>
             <p className="text-muted-foreground">
               Process some content to see your AI-generated learning resources here
+            </p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  // Check if we have any content to show
+  const hasAnyContent = results.summary || results.mindmap || results.quiz || results.flashcards;
+
+  if (!hasAnyContent) {
+    return (
+      <section className="py-16">
+        <div className="container mx-auto px-4">
+          <div className="text-center">
+            <h2 className="text-3xl font-bold mb-4 text-foreground">Your Learning Resources</h2>
+            <p className="text-muted-foreground">
+              Generate some content to see your AI-generated learning resources here
             </p>
           </div>
         </div>
@@ -240,7 +266,7 @@ const ResultsSection: React.FC<ResultsSectionProps> = ({ results }) => {
                 <Card className="p-8 bg-gradient-card shadow-card border-0">
                   <div className="text-center text-muted-foreground">
                     <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>No summary available. Process some content to generate a summary.</p>
+                    <p>No summary available. Generate a summary to see it here.</p>
                   </div>
                 </Card>
               )}
