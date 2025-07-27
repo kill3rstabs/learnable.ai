@@ -7,11 +7,9 @@ import { useProcessing } from "@/hooks/useProcessing";
 import { useToast } from "@/hooks/use-toast";
 import type { ProcessingResults } from "@/lib/types";
 import { useState, useEffect } from "react";
-import InteractiveMindmap from './InteractiveMindmap';
 
 interface ResultsSectionProps {
   results?: ProcessingResults | null;
-  activeTab: string;
 }
 
 // Quiz state interface
@@ -67,7 +65,7 @@ const MarkdownRenderer: React.FC<{ content: string }> = ({ content }) => {
   );
 };
 
-const ResultsSection: React.FC<ResultsSectionProps> = ({ results, activeTab }) => {
+const ResultsSection: React.FC<ResultsSectionProps> = ({ results }) => {
   const { toast } = useToast();
   const [quizState, setQuizState] = useState<QuizState>({
     currentQuestion: 0,
@@ -199,12 +197,24 @@ const ResultsSection: React.FC<ResultsSectionProps> = ({ results, activeTab }) =
         </div>
 
         <div className="max-w-6xl mx-auto">
-          <Tabs defaultValue={activeTab} className="w-full">
-            <TabsList className="hidden">
-              <TabsTrigger value="summary">Summary</TabsTrigger>
-              <TabsTrigger value="quiz">Quiz</TabsTrigger>
-              <TabsTrigger value="flashcards">Flashcards</TabsTrigger>
-              <TabsTrigger value="mindmap">Mind Map</TabsTrigger>
+          <Tabs defaultValue="summary" className="w-full">
+            <TabsList className="grid w-full grid-cols-4 mb-8">
+              <TabsTrigger value="summary" className="flex items-center gap-2">
+                <FileText className="h-4 w-4" />
+                Summary
+              </TabsTrigger>
+              <TabsTrigger value="quiz" className="flex items-center gap-2">
+                <HelpCircle className="h-4 w-4" />
+                Quiz
+              </TabsTrigger>
+              <TabsTrigger value="flashcards" className="flex items-center gap-2">
+                <BookOpen className="h-4 w-4" />
+                Flashcards
+              </TabsTrigger>
+              <TabsTrigger value="mindmap" className="flex items-center gap-2">
+                <Brain className="h-4 w-4" />
+                Mind Map
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="summary">
@@ -472,7 +482,30 @@ const ResultsSection: React.FC<ResultsSectionProps> = ({ results, activeTab }) =
             <TabsContent value="mindmap">
               {results.mindmap ? (
                 <Card className="p-8 bg-gradient-card shadow-card border-0">
-                  <InteractiveMindmap data={results.mindmap} />
+                  <div className="text-center">
+                    <h3 className="text-2xl font-bold mb-8 text-foreground">
+                      {results.mindmap.topic}
+                    </h3>
+                    <div className="space-y-8">
+                      {results.mindmap.mindmap.children?.map((node, index) => (
+                        <div key={index} className="flex flex-col items-center">
+                          <div className="bg-primary text-primary-foreground px-6 py-3 rounded-lg font-semibold mb-4">
+                            {node.name}
+                          </div>
+                          <div className="flex gap-4 flex-wrap justify-center">
+                            {node.children?.map((child, childIndex) => (
+                              <div
+                                key={childIndex}
+                                className="bg-muted text-muted-foreground px-4 py-2 rounded-lg text-sm"
+                              >
+                                {child.name}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </Card>
               ) : (
                 <Card className="p-8 bg-gradient-card shadow-card border-0">
