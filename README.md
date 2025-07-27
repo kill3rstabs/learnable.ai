@@ -17,7 +17,6 @@ A powerful AI-powered learning platform that transforms videos, audio, and text 
 - **Audio Files**: MP3, WAV, M4A, FLAC, AAC, OGG
 - **Documents**: PDF, DOCX, DOC
 - **Text Input**: Direct text pasting
-- **URL Input**: YouTube videos and educational links
 
 ### 🧠 **AI-Generated Learning Resources**
 
@@ -28,7 +27,6 @@ A powerful AI-powered learning platform that transforms videos, audio, and text 
 
 #### 🎯 **Interactive Quizzes**
 - Multiple-choice questions with explanations
-- Customizable question count (1-50 questions)
 - Difficulty-based question generation
 - True/false and fill-in-the-blank support
 
