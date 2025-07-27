@@ -62,6 +62,7 @@ export const useProcessing = (uploadedFiles: UploadedFile[] = []) => {
       return apiClient.summarizeText(input);
     },
     onSuccess: (data) => {
+      console.log('summarizeTextMutation success:', data);
       setResults(prev => ({
         ...prev,
         summary: data,
@@ -70,6 +71,7 @@ export const useProcessing = (uploadedFiles: UploadedFile[] = []) => {
       updateStatus(PROCESSING_STATES.SUCCESS, 100, 'Summary generated successfully!');
     },
     onError: (error: Error) => {
+      console.error('summarizeTextMutation error:', error);
       updateStatus(PROCESSING_STATES.ERROR, 0, '', error.message);
     },
   });
@@ -110,14 +112,15 @@ export const useProcessing = (uploadedFiles: UploadedFile[] = []) => {
       );
     },
     onSuccess: (data) => {
-      setResults({
+      setResults(prev => ({
+        ...prev,
         summary: data.summary,
         mindmap: data.mindmap,
         quiz: data.quiz,
         flashcards: data.flashcards,
         content_type: data.summary.content_type,
         original_file: uploadedFiles[0] || undefined,
-      });
+      }));
       updateStatus(PROCESSING_STATES.SUCCESS, 100, 'All resources generated successfully!');
     },
     onError: (error: Error) => {
@@ -152,6 +155,7 @@ export const useProcessing = (uploadedFiles: UploadedFile[] = []) => {
       );
     },
     onSuccess: (data) => {
+      console.log('summarizeMultimediaMutation success:', data);
       setResults(prev => ({
         ...prev,
         summary: data,
@@ -199,7 +203,7 @@ export const useProcessing = (uploadedFiles: UploadedFile[] = []) => {
       setResults(prev => ({
         ...prev,
         mindmap: data,
-        content_type: data.content_type,
+        content_type: prev?.content_type || data.content_type,
       }));
       updateStatus(PROCESSING_STATES.SUCCESS, 100, 'Mindmap generated successfully!');
     },
@@ -247,7 +251,7 @@ export const useProcessing = (uploadedFiles: UploadedFile[] = []) => {
       setResults(prev => ({
         ...prev,
         quiz: data,
-        content_type: data.content_type,
+        content_type: prev?.content_type || data.content_type,
       }));
       updateStatus(PROCESSING_STATES.SUCCESS, 100, 'Quiz generated successfully!');
     },
@@ -291,7 +295,7 @@ export const useProcessing = (uploadedFiles: UploadedFile[] = []) => {
       setResults(prev => ({
         ...prev,
         flashcards: data,
-        content_type: data.content_type,
+        content_type: prev?.content_type || data.content_type,
       }));
       updateStatus(PROCESSING_STATES.SUCCESS, 100, 'Flashcards generated successfully!');
     },
