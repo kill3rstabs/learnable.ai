@@ -10,6 +10,7 @@ import { useState, useEffect } from "react";
 import MermaidDiagram from "@/components/MermaidDiagram";
 import { convertMindmapToMermaid } from "@/utils/mindmapToMermaid";
 import MindmapViewer from "@/components/MindmapViewer";
+import type { MCQQuestion } from "@/lib/types";
 
 interface ResultsSectionProps {
   results?: ProcessingResults | null;
@@ -87,6 +88,19 @@ const ResultsSection: React.FC<ResultsSectionProps> = ({ results, activeTab }) =
     currentQuestion: 0,
   });
 
+  // Helper function to get correct answer text from letter
+  const getCorrectAnswerText = (question: MCQQuestion) => {
+    const letterIndex = question.correct_answer.charCodeAt(0) - 65; // Convert A=0, B=1, C=2, D=3
+    return question.options[letterIndex];
+  };
+
+  // Helper function to check if answer is correct
+  const isAnswerCorrect = (question: MCQQuestion, userAnswer: string | null) => {
+    if (!userAnswer) return false;
+    const correctAnswerText = getCorrectAnswerText(question);
+    return userAnswer === correctAnswerText;
+  };
+
   // Debug logging
   useEffect(() => {
     console.log('ResultsSection received results:', results);
@@ -141,7 +155,7 @@ const ResultsSection: React.FC<ResultsSectionProps> = ({ results, activeTab }) =
     if (results?.quiz?.quiz) {
       let score = 0;
       results.quiz.quiz.forEach((question, index) => {
-        if (quizState.userAnswers[index] === question.correct_answer) {
+        if (isAnswerCorrect(question, quizState.userAnswers[index])) {
           score++;
         }
       });
@@ -151,6 +165,11 @@ const ResultsSection: React.FC<ResultsSectionProps> = ({ results, activeTab }) =
         showResults: true,
         score,
       }));
+      
+      // Reset to first question for results display
+      setQuizResultState({
+        currentQuestion: 0,
+      });
     }
   };
 
@@ -333,18 +352,19 @@ const ResultsSection: React.FC<ResultsSectionProps> = ({ results, activeTab }) =
               ) : (
                 // Results Interface
                 <Card className="p-8 bg-gradient-card shadow-card border-0">
-                  <div className="text-center mb-8">
-                    <h3 className="text-2xl font-bold mb-4 text-foreground">Quiz Results</h3>
-                    <div className="text-4xl font-bold text-primary mb-2">
-                      {quizState.score}/{results.quiz.quiz.length}
-                    </div>
-                    <div className="text-muted-foreground">
-                      {Math.round((quizState.score / results.quiz.quiz.length) * 100)}% Score
+                  <div className="flex items-center justify-between mb-8">
+                    <div className="flex items-center gap-4">
+                      <h3 className="text-2xl font-bold text-foreground">Quiz Results</h3>
+                      <div className="text-2xl font-bold text-primary">
+                        {quizState.score}/{results.quiz.quiz.length}
+                      </div>
+                      <div className="text-muted-foreground">
+                        {Math.round((quizState.score / results.quiz.quiz.length) * 100)}% Score
+                      </div>
                     </div>
                     <Button
                       variant="outline"
                       onClick={handleRestartQuiz}
-                      className="mt-4"
                     >
                       <RotateCcw className="h-4 w-4 mr-2" />
                       Retake Quiz
@@ -355,7 +375,8 @@ const ResultsSection: React.FC<ResultsSectionProps> = ({ results, activeTab }) =
                     {(() => {
                       const question = results.quiz.quiz[quizResultState.currentQuestion];
                       const userAnswer = quizState.userAnswers[quizResultState.currentQuestion];
-                      const isCorrect = userAnswer === question.correct_answer;
+                      const correctAnswerText = getCorrectAnswerText(question);
+                      const isCorrect = isAnswerCorrect(question, userAnswer);
 
                       return (
                         <Card className="p-6 bg-background/50 border border-border/50">
@@ -380,7 +401,7 @@ const ResultsSection: React.FC<ResultsSectionProps> = ({ results, activeTab }) =
                                   <div
                                     key={optIndex}
                                     className={`p-3 rounded-lg border transition-colors ${
-                                      option === question.correct_answer
+                                      option === correctAnswerText
                                         ? "border-green-500 bg-green-50 text-green-700"
                                         : option === userAnswer && !isCorrect
                                         ? "border-red-500 bg-red-50 text-red-700"
@@ -391,7 +412,7 @@ const ResultsSection: React.FC<ResultsSectionProps> = ({ results, activeTab }) =
                                       {String.fromCharCode(65 + optIndex)}.
                                     </span>
                                     {option}
-                                    {option === question.correct_answer && (
+                                    {option === correctAnswerText && (
                                       <CheckCircle className="h-4 w-4 ml-2 inline text-green-600" />
                                     )}
                                     {option === userAnswer && !isCorrect && (
@@ -613,18 +634,19 @@ const ResultsSection: React.FC<ResultsSectionProps> = ({ results, activeTab }) =
                   ) : (
                     // Results Interface
                     <Card className="p-8 bg-gradient-card shadow-card border-0">
-                      <div className="text-center mb-8">
-                        <h3 className="text-2xl font-bold mb-4 text-foreground">Quiz Results</h3>
-                        <div className="text-4xl font-bold text-primary mb-2">
-                          {quizState.score}/{results.quiz.quiz.length}
-                        </div>
-                        <div className="text-muted-foreground">
-                          {Math.round((quizState.score / results.quiz.quiz.length) * 100)}% Score
+                      <div className="flex items-center justify-between mb-8">
+                        <div className="flex items-center gap-4">
+                          <h3 className="text-2xl font-bold text-foreground">Quiz Results</h3>
+                          <div className="text-2xl font-bold text-primary">
+                            {quizState.score}/{results.quiz.quiz.length}
+                          </div>
+                          <div className="text-muted-foreground">
+                            {Math.round((quizState.score / results.quiz.quiz.length) * 100)}% Score
+                          </div>
                         </div>
                         <Button
                           variant="outline"
                           onClick={handleRestartQuiz}
-                          className="mt-4"
                         >
                           <RotateCcw className="h-4 w-4 mr-2" />
                           Retake Quiz
@@ -635,7 +657,8 @@ const ResultsSection: React.FC<ResultsSectionProps> = ({ results, activeTab }) =
                         {(() => {
                           const question = results.quiz.quiz[quizResultState.currentQuestion];
                           const userAnswer = quizState.userAnswers[quizResultState.currentQuestion];
-                          const isCorrect = userAnswer === question.correct_answer;
+                          const correctAnswerText = getCorrectAnswerText(question);
+                          const isCorrect = isAnswerCorrect(question, userAnswer);
 
                           return (
                             <Card className="p-6 bg-background/50 border border-border/50">
@@ -660,7 +683,7 @@ const ResultsSection: React.FC<ResultsSectionProps> = ({ results, activeTab }) =
                                       <div
                                         key={optIndex}
                                         className={`p-3 rounded-lg border transition-colors ${
-                                          option === question.correct_answer
+                                          option === correctAnswerText
                                             ? "border-green-500 bg-green-50 text-green-700"
                                             : option === userAnswer && !isCorrect
                                             ? "border-red-500 bg-red-50 text-red-700"
@@ -671,7 +694,7 @@ const ResultsSection: React.FC<ResultsSectionProps> = ({ results, activeTab }) =
                                           {String.fromCharCode(65 + optIndex)}.
                                         </span>
                                         {option}
-                                        {option === question.correct_answer && (
+                                        {option === correctAnswerText && (
                                           <CheckCircle className="h-4 w-4 ml-2 inline text-green-600" />
                                         )}
                                         {option === userAnswer && !isCorrect && (
