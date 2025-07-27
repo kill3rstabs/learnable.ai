@@ -256,34 +256,6 @@ const InputSection: React.FC<InputSectionProps> = ({
                     multiple={true}
                     disabled={isProcessing}
                   />
-                  
-                  {/* File List */}
-                  {uploadedFiles.length > 0 && (
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium text-muted-foreground">Uploaded Files:</Label>
-                      <div className="space-y-2 max-h-40 overflow-y-auto">
-                        {uploadedFiles.map((file) => (
-                          <div key={file.id} className="flex items-center justify-between p-2 bg-muted/50 rounded-lg">
-                            <div className="flex items-center gap-2">
-                              <File className="h-4 w-4 text-muted-foreground" />
-                              <span className="text-sm font-medium">{file.name}</span>
-                              <Badge variant="outline" className="text-xs">
-                                {file.extension}
-                              </Badge>
-                            </div>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => removeFile(file.id)}
-                              className="h-6 w-6 p-0"
-                            >
-                              <X className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                 </TabsContent>
 
                 <TabsContent value="url" className="space-y-4">

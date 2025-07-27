@@ -113,3 +113,36 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+/* Mermaid Diagram Styles */
+.mermaid-diagram {
+  @apply w-full;
+}
+
+.mermaid-diagram svg {
+  @apply max-w-full h-auto;
+}
+
+.mermaid-diagram .node {
+  @apply transition-all duration-200;
+}
+
+.mermaid-diagram .node:hover {
+  @apply shadow-lg;
+}
+
+.mermaid-diagram .label {
+  @apply font-medium;
+}
+
+.mermaid-diagram .cluster {
+  @apply rounded-lg;
+}
+
+.mermaid-diagram .edgePath {
+  @apply transition-all duration-200;
+}
+
+.mermaid-diagram .edgePath:hover {
+  @apply stroke-2;
+}
