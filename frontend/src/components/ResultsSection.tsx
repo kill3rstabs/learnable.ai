@@ -15,6 +15,8 @@ import type { MCQQuestion } from "@/lib/types";
 interface ResultsSectionProps {
   results?: ProcessingResults | null;
   activeTab?: string;
+  onRegenerate?: () => void;
+  isRegenerating?: boolean;
 }
 
 // Quiz state interface
@@ -28,6 +30,11 @@ interface QuizState {
 // Quiz result state interface
 interface QuizResultState {
   currentQuestion: number;
+}
+
+// Flashcard state interface
+interface FlashcardState {
+  currentCard: number;
 }
 
 // Markdown renderer component
@@ -75,7 +82,7 @@ const MarkdownRenderer: React.FC<{ content: string }> = ({ content }) => {
   );
 };
 
-const ResultsSection: React.FC<ResultsSectionProps> = ({ results, activeTab }) => {
+const ResultsSection: React.FC<ResultsSectionProps> = ({ results, activeTab, onRegenerate, isRegenerating = false }) => {
   const { toast } = useToast();
   const [quizState, setQuizState] = useState<QuizState>({
     currentQuestion: 0,
@@ -86,6 +93,10 @@ const ResultsSection: React.FC<ResultsSectionProps> = ({ results, activeTab }) =
 
   const [quizResultState, setQuizResultState] = useState<QuizResultState>({
     currentQuestion: 0,
+  });
+
+  const [flashcardState, setFlashcardState] = useState<FlashcardState>({
+    currentCard: 0,
   });
 
   // Helper function to get correct answer text from letter
@@ -120,6 +131,15 @@ const ResultsSection: React.FC<ResultsSectionProps> = ({ results, activeTab }) =
       });
     }
   }, [results?.quiz]);
+
+  // Initialize flashcard state when results change
+  useEffect(() => {
+    if (results?.flashcards?.flashcards) {
+      setFlashcardState({
+        currentCard: 0,
+      });
+    }
+  }, [results?.flashcards]);
 
   const handleAnswerSelect = (answer: string) => {
     if (results?.quiz?.quiz) {
@@ -202,6 +222,25 @@ const ResultsSection: React.FC<ResultsSectionProps> = ({ results, activeTab }) =
     }
   };
 
+  // Flashcard navigation handlers
+  const handleNextFlashcard = () => {
+    if (results?.flashcards?.flashcards && flashcardState.currentCard < results.flashcards.flashcards.length - 1) {
+      setFlashcardState(prev => ({
+        ...prev,
+        currentCard: prev.currentCard + 1,
+      }));
+    }
+  };
+
+  const handlePreviousFlashcard = () => {
+    if (flashcardState.currentCard > 0) {
+      setFlashcardState(prev => ({
+        ...prev,
+        currentCard: prev.currentCard - 1,
+      }));
+    }
+  };
+
   // If no results, show empty state
   if (!results) {
     return (
@@ -242,8 +281,29 @@ const ResultsSection: React.FC<ResultsSectionProps> = ({ results, activeTab }) =
       switch (activeTab) {
         case "summary":
           return results?.summary ? (
-            <div className="bg-background/50 p-6 rounded-lg border border-border/50 max-h-96 overflow-y-auto">
-              <MarkdownRenderer content={results.summary.summary} />
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-foreground">Summary</h3>
+                {onRegenerate && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={onRegenerate}
+                    disabled={isRegenerating}
+                    className="flex items-center gap-2"
+                  >
+                    {isRegenerating ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <RotateCcw className="h-4 w-4" />
+                    )}
+                    Regenerate
+                  </Button>
+                )}
+              </div>
+              <div className="bg-background/50 p-6 rounded-lg border border-border/50 max-h-96 overflow-y-auto">
+                <MarkdownRenderer content={results.summary.summary} />
+              </div>
             </div>
           ) : (
             <Card className="p-8 bg-gradient-card shadow-card border-0">
@@ -256,7 +316,28 @@ const ResultsSection: React.FC<ResultsSectionProps> = ({ results, activeTab }) =
 
         case "mindmap":
           return results?.mindmap ? (
-            <MindmapViewer mindmap={results.mindmap} />
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-foreground">Mindmap</h3>
+                {onRegenerate && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={onRegenerate}
+                    disabled={isRegenerating}
+                    className="flex items-center gap-2"
+                  >
+                    {isRegenerating ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <RotateCcw className="h-4 w-4" />
+                    )}
+                    Regenerate
+                  </Button>
+                )}
+              </div>
+              <MindmapViewer mindmap={results.mindmap} />
+            </div>
           ) : (
             <Card className="p-8 bg-gradient-card shadow-card border-0">
               <div className="text-center text-muted-foreground">
@@ -274,7 +355,25 @@ const ResultsSection: React.FC<ResultsSectionProps> = ({ results, activeTab }) =
                 <Card className="p-8 bg-gradient-card shadow-card border-0">
                   <div className="mb-6">
                     <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-2xl font-bold text-foreground">Quiz</h3>
+                      <div className="flex items-center gap-4">
+                        <h3 className="text-2xl font-bold text-foreground">Quiz</h3>
+                        {onRegenerate && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={onRegenerate}
+                            disabled={isRegenerating}
+                            className="flex items-center gap-2"
+                          >
+                            {isRegenerating ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <RotateCcw className="h-4 w-4" />
+                            )}
+                            Regenerate
+                          </Button>
+                        )}
+                      </div>
                       <div className="flex items-center gap-4">
                         <span className="text-sm text-muted-foreground">
                           Question {quizState.currentQuestion + 1} of {results.quiz.quiz.length}
@@ -462,30 +561,90 @@ const ResultsSection: React.FC<ResultsSectionProps> = ({ results, activeTab }) =
 
         case "flashcards":
           return results?.flashcards ? (
-            <div className="grid md:grid-cols-2 gap-6">
-              {results.flashcards.flashcards.map((card, index) => (
-                <Card key={index} className="p-6 bg-gradient-card shadow-card border-0 hover:shadow-elevated transition-all duration-300 cursor-pointer group">
-                  <div className="text-center">
-                    <div className="mb-4">
-                      <Badge variant="outline" className="mb-4">
-                        Card {index + 1}
-                      </Badge>
-                      <Badge variant="secondary" className="ml-2">
-                        {card.category}
-                      </Badge>
-                      <Badge variant="outline" className="ml-2">
-                        {card.difficulty}
-                      </Badge>
-                      <h4 className="text-lg font-semibold text-foreground mb-4">
-                        {card.front}
-                      </h4>
+            <div className="space-y-6">
+              <Card className="p-8 bg-gradient-card shadow-card border-0">
+                <div className="mb-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-4">
+                      <h3 className="text-2xl font-bold text-foreground">Flashcards</h3>
+                      {onRegenerate && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={onRegenerate}
+                          disabled={isRegenerating}
+                          className="flex items-center gap-2"
+                        >
+                          {isRegenerating ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <RotateCcw className="h-4 w-4" />
+                          )}
+                          Regenerate
+                        </Button>
+                      )}
                     </div>
-                    <div className="border-t pt-4 group-hover:opacity-100 opacity-70 transition-opacity">
-                      <p className="text-muted-foreground">{card.back}</p>
+                    <div className="flex items-center gap-4">
+                      <span className="text-sm text-muted-foreground">
+                        Card {flashcardState.currentCard + 1} of {results.flashcards.flashcards.length}
+                      </span>
+                      <div className="flex gap-1">
+                        {results.flashcards.flashcards.map((_, index) => (
+                          <div
+                            key={index}
+                            className={`w-2 h-2 rounded-full ${
+                              index === flashcardState.currentCard
+                                ? 'bg-primary'
+                                : 'bg-muted'
+                            }`}
+                          />
+                        ))}
+                      </div>
                     </div>
                   </div>
-                </Card>
-              ))}
+
+                  <div className="text-center">
+                    <div className="mb-6">
+                      <div className="flex justify-center gap-2 mb-4">
+                        <Badge variant="outline">
+                          Card {flashcardState.currentCard + 1}
+                        </Badge>
+                        <Badge variant="secondary">
+                          {results.flashcards.flashcards[flashcardState.currentCard].category}
+                        </Badge>
+                        <Badge variant="outline">
+                          {results.flashcards.flashcards[flashcardState.currentCard].difficulty}
+                        </Badge>
+                      </div>
+                      <h4 className="text-xl font-semibold text-foreground mb-6">
+                        {results.flashcards.flashcards[flashcardState.currentCard].front}
+                      </h4>
+                      <div className="border-t pt-6">
+                        <p className="text-lg text-muted-foreground leading-relaxed">
+                          {results.flashcards.flashcards[flashcardState.currentCard].back}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between">
+                    <Button
+                      variant="outline"
+                      onClick={handlePreviousFlashcard}
+                      disabled={flashcardState.currentCard === 0}
+                    >
+                      Previous
+                    </Button>
+                    <Button
+                      variant="hero"
+                      onClick={handleNextFlashcard}
+                      disabled={flashcardState.currentCard === results.flashcards.flashcards.length - 1}
+                    >
+                      Next
+                    </Button>
+                  </div>
+                </div>
+              </Card>
             </div>
           ) : (
             <Card className="p-8 bg-gradient-card shadow-card border-0">
@@ -745,30 +904,72 @@ const ResultsSection: React.FC<ResultsSectionProps> = ({ results, activeTab }) =
 
             <TabsContent value="flashcards">
               {results.flashcards ? (
-                <div className="grid md:grid-cols-2 gap-6">
-                  {results.flashcards.flashcards.map((card, index) => (
-                    <Card key={index} className="p-6 bg-gradient-card shadow-card border-0 hover:shadow-elevated transition-all duration-300 cursor-pointer group">
-                      <div className="text-center">
-                        <div className="mb-4">
-                          <Badge variant="outline" className="mb-4">
-                            Card {index + 1}
-                          </Badge>
-                          <Badge variant="secondary" className="ml-2">
-                            {card.category}
-                          </Badge>
-                          <Badge variant="outline" className="ml-2">
-                            {card.difficulty}
-                          </Badge>
-                          <h4 className="text-lg font-semibold text-foreground mb-4">
-                            {card.front}
-                          </h4>
-                        </div>
-                        <div className="border-t pt-4 group-hover:opacity-100 opacity-70 transition-opacity">
-                          <p className="text-muted-foreground">{card.back}</p>
+                <div className="space-y-6">
+                  <Card className="p-8 bg-gradient-card shadow-card border-0">
+                    <div className="mb-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-2xl font-bold text-foreground">Flashcards</h3>
+                        <div className="flex items-center gap-4">
+                          <span className="text-sm text-muted-foreground">
+                            Card {flashcardState.currentCard + 1} of {results.flashcards.flashcards.length}
+                          </span>
+                          <div className="flex gap-1">
+                            {results.flashcards.flashcards.map((_, index) => (
+                              <div
+                                key={index}
+                                className={`w-2 h-2 rounded-full ${
+                                  index === flashcardState.currentCard
+                                    ? 'bg-primary'
+                                    : 'bg-muted'
+                                }`}
+                              />
+                            ))}
+                          </div>
                         </div>
                       </div>
-                    </Card>
-                  ))}
+
+                      <div className="text-center">
+                        <div className="mb-6">
+                          <div className="flex justify-center gap-2 mb-4">
+                            <Badge variant="outline">
+                              Card {flashcardState.currentCard + 1}
+                            </Badge>
+                            <Badge variant="secondary">
+                              {results.flashcards.flashcards[flashcardState.currentCard].category}
+                            </Badge>
+                            <Badge variant="outline">
+                              {results.flashcards.flashcards[flashcardState.currentCard].difficulty}
+                            </Badge>
+                          </div>
+                          <h4 className="text-xl font-semibold text-foreground mb-6">
+                            {results.flashcards.flashcards[flashcardState.currentCard].front}
+                          </h4>
+                          <div className="border-t pt-6">
+                            <p className="text-lg text-muted-foreground leading-relaxed">
+                              {results.flashcards.flashcards[flashcardState.currentCard].back}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-between">
+                        <Button
+                          variant="outline"
+                          onClick={handlePreviousFlashcard}
+                          disabled={flashcardState.currentCard === 0}
+                        >
+                          Previous
+                        </Button>
+                        <Button
+                          variant="hero"
+                          onClick={handleNextFlashcard}
+                          disabled={flashcardState.currentCard === results.flashcards.flashcards.length - 1}
+                        >
+                          Next
+                        </Button>
+                      </div>
+                    </div>
+                  </Card>
                 </div>
               ) : (
                 <Card className="p-8 bg-gradient-card shadow-card border-0">

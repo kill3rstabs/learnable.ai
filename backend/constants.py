@@ -99,6 +99,26 @@ Explanation: [Why this is correct]
 
 Continue for all {num_questions} questions."""
 
+# Topic extraction prompt
+TOPIC_EXTRACTION_PROMPT = """Analyze the following content and extract a concise 1-2 word topic that best represents the main subject.
+
+Requirements:
+- Extract only 1-2 words maximum
+- Focus on the primary subject or theme
+- Make it specific and meaningful
+- Avoid generic terms like "content" or "information"
+- Use nouns that capture the essence
+
+Examples:
+- "Machine Learning" (not "AI and machine learning concepts")
+- "Climate Change" (not "Environmental science and climate")
+- "Python Programming" (not "Programming languages and Python")
+
+Content to analyze:
+{input}
+
+Return only the topic words without quotes or additional text."""
+
 # Mindmap Generation Prompts
 MINDMAP_GENERATION_PROMPT = """
 You are a mindmap generator. Create a mindmap structure for the given topic.

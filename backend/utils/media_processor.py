@@ -4,6 +4,7 @@ Media processing utilities for audio and video transcription and summarization.
 import os
 import tempfile
 import base64
+import logging
 from typing import Tuple, Optional
 from ninja.files import UploadedFile
 from langchain_core.messages import SystemMessage, HumanMessage
@@ -15,6 +16,8 @@ from constants import (
 )
 import PyPDF2
 import docx
+
+logger = logging.getLogger(__name__)
 
 
 class MediaProcessor:
@@ -46,16 +49,25 @@ class MediaProcessor:
 
     def _save_uploaded_file(self, uploaded_file: UploadedFile, suffix: str) -> str:
         """Save uploaded file to temporary location and return file path."""
-        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as temp_file:
-            for chunk in uploaded_file.chunks():
-                temp_file.write(chunk)
-            return temp_file.name
+        try:
+            with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as temp_file:
+                # Read file in chunks to handle large files better
+                chunk_size = 8192  # 8KB chunks
+                for chunk in uploaded_file.chunks(chunk_size=chunk_size):
+                    temp_file.write(chunk)
+                temp_file.flush()  # Ensure all data is written
+                return temp_file.name
+        except Exception as e:
+            raise Exception(f"Failed to save uploaded file: {str(e)}")
     
     def _encode_file_to_base64(self, file_path: str) -> str:
         """Encode file to base64 string."""
-        with open(file_path, 'rb') as f:
-            file_data = f.read()
-            return base64.b64encode(file_data).decode('utf-8')
+        try:
+            with open(file_path, 'rb') as f:
+                file_data = f.read()
+                return base64.b64encode(file_data).decode('utf-8')
+        except Exception as e:
+            raise Exception(f"Failed to encode file to base64: {str(e)}")
     
     def _create_transcription_message(self, base64_data: str, mime_type: str, prompt: str) -> list:
         """Create transcription message for Gemini."""
@@ -122,35 +134,59 @@ class MediaProcessor:
         Returns:
             Tuple of (summary, error_message)
         """
-        # Validate file
-        is_valid, file_extension = self.validate_video_file(video_file)
-        if not is_valid:
-            return None, file_extension
-        
-        # Save file temporarily
-        temp_file_path = self._save_uploaded_file(video_file, file_extension)
-        
+        temp_file_path = None
         try:
+            logger.info(f"Starting video processing: {video_file.name}, size: {video_file.size}")
+            
+            # Validate file
+            is_valid, file_extension = self.validate_video_file(video_file)
+            if not is_valid:
+                logger.error(f"Video file validation failed: {file_extension}")
+                return None, file_extension
+            
+            # Check file size (limit to 50MB for video files)
+            if video_file.size > 50 * 1024 * 1024:  # 50MB
+                logger.error(f"Video file size exceeds limit: {video_file.size} bytes")
+                return None, "Video file size exceeds 50MB limit"
+            
+            # Save file temporarily
+            logger.info("Saving video file to temporary location...")
+            temp_file_path = self._save_uploaded_file(video_file, file_extension)
+            logger.info(f"Video file saved to: {temp_file_path}")
+            
             # Encode to base64
+            logger.info("Encoding video file to base64...")
             video_base64 = self._encode_file_to_base64(temp_file_path)
+            logger.info(f"Video file encoded, base64 length: {len(video_base64)}")
             
             # Step 1: Transcribe
+            logger.info("Starting video transcription...")
             transcription_message = self._create_transcription_message(
                 video_base64, f"video/{file_extension[1:]}", VIDEO_TRANSCRIPTION_PROMPT
             )
             transcription = self.gemini_service.llm.invoke(transcription_message).content
+            logger.info(f"Video transcription completed, length: {len(transcription)}")
             
             # Step 2: Summarize
+            logger.info("Starting video summarization...")
             summary_message = self._create_summary_message(transcription)
             summary = self.gemini_service.llm.invoke(summary_message).content
+            logger.info(f"Video summarization completed, length: {len(summary)}")
             
             return summary, None
             
         except Exception as e:
+            logger.error(f"Error processing video file: {str(e)}", exc_info=True)
             return None, f"Error processing video file: {str(e)}"
         finally:
-            if os.path.exists(temp_file_path):
-                os.unlink(temp_file_path)
+            # Clean up temporary file
+            if temp_file_path and os.path.exists(temp_file_path):
+                try:
+                    os.unlink(temp_file_path)
+                    logger.info(f"Temporary file cleaned up: {temp_file_path}")
+                except Exception as e:
+                    logger.warning(f"Failed to clean up temporary file {temp_file_path}: {e}")
+                    pass  # Ignore cleanup errors
     
     def process_document_file(self, document_file: UploadedFile) -> Tuple[str, Optional[str]]:
         """
@@ -249,31 +285,53 @@ class MediaProcessor:
     
     def _extract_content_from_video(self, video_file) -> Tuple[str, Optional[str]]:
         """Extract content from video file."""
-        # Validate file
-        is_valid, file_extension = self.validate_video_file(video_file)
-        if not is_valid:
-            return None, file_extension
-        
-        # Save file temporarily
-        temp_file_path = self._save_uploaded_file(video_file, file_extension)
-        
+        temp_file_path = None
         try:
+            logger.info(f"Starting video content extraction: {video_file.name}, size: {video_file.size}")
+            
+            # Validate file
+            is_valid, file_extension = self.validate_video_file(video_file)
+            if not is_valid:
+                logger.error(f"Video file validation failed: {file_extension}")
+                return None, file_extension
+            
+            # Check file size (limit to 50MB for video files)
+            if video_file.size > 50 * 1024 * 1024:  # 50MB
+                logger.error(f"Video file size exceeds limit: {video_file.size} bytes")
+                return None, "Video file size exceeds 50MB limit"
+            
+            # Save file temporarily
+            logger.info("Saving video file to temporary location...")
+            temp_file_path = self._save_uploaded_file(video_file, file_extension)
+            logger.info(f"Video file saved to: {temp_file_path}")
+            
             # Encode to base64
+            logger.info("Encoding video file to base64...")
             video_base64 = self._encode_file_to_base64(temp_file_path)
+            logger.info(f"Video file encoded, base64 length: {len(video_base64)}")
             
             # Transcribe video
+            logger.info("Starting video transcription...")
             transcription_message = self._create_transcription_message(
                 video_base64, f"video/{file_extension[1:]}", VIDEO_TRANSCRIPTION_PROMPT
             )
             content = self.gemini_service.llm.invoke(transcription_message).content
+            logger.info(f"Video transcription completed, length: {len(content)}")
             
             return content, None
             
         except Exception as e:
+            logger.error(f"Error extracting content from video file: {str(e)}", exc_info=True)
             return None, f"Error extracting content from video file: {str(e)}"
         finally:
-            if os.path.exists(temp_file_path):
-                os.unlink(temp_file_path)
+            # Clean up temporary file
+            if temp_file_path and os.path.exists(temp_file_path):
+                try:
+                    os.unlink(temp_file_path)
+                    logger.info(f"Temporary file cleaned up: {temp_file_path}")
+                except Exception as e:
+                    logger.warning(f"Failed to clean up temporary file {temp_file_path}: {e}")
+                    pass  # Ignore cleanup errors
     
     def _extract_content_from_document(self, document_file) -> Tuple[str, Optional[str]]:
         """Extract content from document file."""

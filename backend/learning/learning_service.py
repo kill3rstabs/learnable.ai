@@ -6,7 +6,8 @@ from typing import Dict, Any, List, Optional
 from ninja.files import UploadedFile
 from core.gemini import GeminiService
 from constants import (
-    MINDMAP_GENERATION_PROMPT, FLASHCARD_GENERATION_PROMPT, get_mcq_quiz_prompt
+    MINDMAP_GENERATION_PROMPT, FLASHCARD_GENERATION_PROMPT, get_mcq_quiz_prompt,
+    TOPIC_EXTRACTION_PROMPT
 )
 from schema import (
     MCQQuizStructuredOutput, MCQQuestion, MindmapNode
@@ -56,6 +57,13 @@ class LearningService:
             else:
                 return {"success": False, "error": "Either topic, audio file, video file, or document file must be provided"}
             
+            # Extract topic from content if not provided
+            if not topic or not topic.strip():
+                extracted_topic = self.gemini_service.run_prompt(TOPIC_EXTRACTION_PROMPT, content)
+                # Clean the extracted topic
+                extracted_topic = extracted_topic.strip().strip('"').strip("'")
+                topic = extracted_topic
+            
             # Generate mindmap
             mindmap_json = self.gemini_service.run_prompt(MINDMAP_GENERATION_PROMPT, content)
             
@@ -78,7 +86,8 @@ class LearningService:
                 "success": True,
                 "mindmap": MindmapNode(**mindmap_data),
                 "content_type": content_type,
-                "content": content
+                "content": content,
+                "extracted_topic": topic  # Add the extracted topic to response
             }
         except json.JSONDecodeError as e:
             return {

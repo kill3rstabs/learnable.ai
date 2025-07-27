@@ -315,7 +315,12 @@ const InputSection: React.FC<InputSectionProps> = ({
 
                 <TabsContent value="summary" className="space-y-4">
                   {hasResultsForTab() ? (
-                    <ResultsSection results={results} activeTab="summary" />
+                    <ResultsSection 
+                      results={results} 
+                      activeTab="summary" 
+                      onRegenerate={handleGenerateContent}
+                      isRegenerating={getLoadingState()}
+                    />
                   ) : (
                     <div className="text-center p-8">
                       <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
@@ -343,7 +348,12 @@ const InputSection: React.FC<InputSectionProps> = ({
 
                 <TabsContent value="mindmap" className="space-y-4">
                   {hasResultsForTab() ? (
-                    <ResultsSection results={results} activeTab="mindmap" />
+                    <ResultsSection 
+                      results={results} 
+                      activeTab="mindmap" 
+                      onRegenerate={handleGenerateContent}
+                      isRegenerating={getLoadingState()}
+                    />
                   ) : (
                     <div className="text-center p-8">
                       <Brain className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
@@ -371,7 +381,12 @@ const InputSection: React.FC<InputSectionProps> = ({
 
                 <TabsContent value="quiz" className="space-y-4">
                   {hasResultsForTab() ? (
-                    <ResultsSection results={results} activeTab="quiz" />
+                    <ResultsSection 
+                      results={results} 
+                      activeTab="quiz" 
+                      onRegenerate={handleGenerateContent}
+                      isRegenerating={getLoadingState()}
+                    />
                   ) : (
                     <div className="text-center p-8">
                       <HelpCircle className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
@@ -399,7 +414,12 @@ const InputSection: React.FC<InputSectionProps> = ({
 
                 <TabsContent value="flashcards" className="space-y-4">
                   {hasResultsForTab() ? (
-                    <ResultsSection results={results} activeTab="flashcards" />
+                    <ResultsSection 
+                      results={results} 
+                      activeTab="flashcards" 
+                      onRegenerate={handleGenerateContent}
+                      isRegenerating={getLoadingState()}
+                    />
                   ) : (
                     <div className="text-center p-8">
                       <BookOpen className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />

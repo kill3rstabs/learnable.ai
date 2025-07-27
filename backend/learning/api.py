@@ -53,59 +53,63 @@ def summarize_content(
     Summarize content using Gemini API - accepts text, audio, video, and document files
     """
     try:
-
-        
         content_type = None
         content_text = ""
         summary = None
+        original_text = ""
+        word_count_original = 0
+        
         # Handle text input
         if data and data.text:
             content_type = "text"
             content_text = data.text
+            original_text = data.text
+            word_count_original = len(data.text.split())
             summary, error = media_processor.summarize_text(data.text)
             if error:
                 return {"error": error}
         # Handle audio input
         elif audio_file:
             content_type = "audio"
+            print(f"Processing audio file: {audio_file.name}, size: {audio_file.size}")
+            original_text = f"Audio file: {audio_file.name}"
             summary, error = media_processor.process_audio_file(audio_file)
             if error:
                 return {"error": error}
         # Handle video input
         elif video_file:
             content_type = "video"
+            print(f"Processing video file: {video_file.name}, size: {video_file.size}")
+            original_text = f"Video file: {video_file.name}"
             summary, error = media_processor.process_video_file(video_file)
             if error:
                 return {"error": error}
         # Handle document input
         elif document_file:
             content_type = "document"
+            print(f"Processing document file: {document_file.name}, size: {document_file.size}")
+            original_text = f"Document file: {document_file.name}"
             summary, error = media_processor.process_document_file(document_file)
             if error:
                 return {"error": error}
         else:
             return {"error": "Either text content, audio file, video file, or document file must be provided"}
-        # Determine original text for response
-        if content_type == "text":
-            original_text = content_text
-            word_count_original = len(content_text.split())
-        else:
-            file_name = (
-                audio_file.name if content_type == "audio" else
-                video_file.name if content_type == "video" else
-                document_file.name if content_type == "document" else ""
+        
+        if summary:
+            word_count_summary = len(summary.split())
+            return SummarizeTextOutput(
+                success=True,
+                original_text=original_text,
+                summary=summary,
+                word_count_original=word_count_original,
+                word_count_summary=word_count_summary,
+                content_type=content_type
             )
-            original_text = f"{content_type.capitalize()} file: {file_name}"
-            word_count_original = 0
-        return SummarizeTextOutput(
-            success=True,
-            original_text=original_text,
-            summary=summary,
-            word_count_original=word_count_original,
-            word_count_summary=len(summary.split()),
-            content_type=content_type
-        )
+        else:
+            return {"error": "Failed to generate summary"}
+            
     except Exception as e:
+        print(f"Error in summarize_content: {str(e)}")
         return {"error": f"An error occurred: {str(e)}"}
 
 
@@ -122,7 +126,8 @@ def summarize_text(request, data: SummarizeTextInput):
             original_text=data.text,
             summary=summary,
             word_count_original=len(data.text.split()),
-            word_count_summary=len(summary.split())
+            word_count_summary=len(summary.split()),
+            content_type="text"
         )
         
     except Exception as e:
@@ -162,9 +167,16 @@ def generate_mindmap_multimedia(
     Generate mindmap JSON structure from multimedia content (text, audio, video, or document)
     """
     try:
-
-        
         topic = data.topic if data else None
+        
+        # Log file information for debugging
+        if audio_file:
+            print(f"Processing audio file for mindmap: {audio_file.name}, size: {audio_file.size}")
+        elif video_file:
+            print(f"Processing video file for mindmap: {video_file.name}, size: {video_file.size}")
+        elif document_file:
+            print(f"Processing document file for mindmap: {document_file.name}, size: {document_file.size}")
+        
         result = learning_service.generate_mindmap_from_multimedia(
             topic=topic,
             audio_file=audio_file,
@@ -173,15 +185,18 @@ def generate_mindmap_multimedia(
             media_processor=media_processor
         )
         if result["success"]:
+            # Use extracted topic as the main topic for the mindmap
+            final_topic = result.get("extracted_topic", result.get("content", topic or "Multimedia Content"))
             return MindmapOutput(
                 success=True,
-                topic=result.get("content", topic or "Multimedia Content"),
+                topic=final_topic,
                 mindmap=result["mindmap"],
                 content_type=result.get("content_type")
             )
         else:
             return {"error": result["error"]}
     except Exception as e:
+        print(f"Error in generate_mindmap_multimedia: {str(e)}")
         return {"error": f"An error occurred: {str(e)}"}
 
 

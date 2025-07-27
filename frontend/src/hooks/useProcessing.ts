@@ -219,6 +219,11 @@ export const useProcessing = (uploadedFiles: UploadedFile[] = []) => {
       
       if ('content' in input && input.content && input.content.trim()) {
         // Text quiz
+        console.log('Sending quiz request with content:', input.content.substring(0, 100) + '...');
+        console.log('Full request data:', {
+          content: input.content,
+          num_questions: 'numQuestions' in input ? input.numQuestions : 10,
+        });
         return apiClient.generateMCQQuiz({
           content: input.content,
           num_questions: 'numQuestions' in input ? input.numQuestions : 10,
