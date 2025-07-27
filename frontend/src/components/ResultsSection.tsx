@@ -189,12 +189,6 @@ const ResultsSection: React.FC<ResultsSectionProps> = ({ results }) => {
   return (
     <section className="py-16">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold mb-4 text-foreground">Your Learning Resources</h2>
-          <p className="text-muted-foreground">
-            AI-generated content based on your input material
-          </p>
-        </div>
 
         <div className="max-w-6xl mx-auto">
           <Tabs defaultValue="summary" className="w-full">
@@ -252,7 +246,7 @@ const ResultsSection: React.FC<ResultsSectionProps> = ({ results }) => {
                     </div>
                     <div>
                       <h4 className="font-semibold mb-4 text-foreground">Summary</h4>
-                      <div className="bg-background/50 p-6 rounded-lg border border-border/50">
+                      <div className="bg-background/50 p-6 rounded-lg border border-border/50 max-h-96 overflow-y-auto">
                         <MarkdownRenderer content={results.summary.summary} />
                       </div>
                     </div>
