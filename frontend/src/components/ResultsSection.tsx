@@ -24,6 +24,11 @@ interface QuizState {
   score: number;
 }
 
+// Quiz result state interface
+interface QuizResultState {
+  currentQuestion: number;
+}
+
 // Markdown renderer component
 const MarkdownRenderer: React.FC<{ content: string }> = ({ content }) => {
   // Simple markdown parser for basic formatting
@@ -76,6 +81,10 @@ const ResultsSection: React.FC<ResultsSectionProps> = ({ results, activeTab }) =
     userAnswers: [],
     showResults: false,
     score: 0,
+  });
+
+  const [quizResultState, setQuizResultState] = useState<QuizResultState>({
+    currentQuestion: 0,
   });
 
   // Debug logging
@@ -153,6 +162,24 @@ const ResultsSection: React.FC<ResultsSectionProps> = ({ results, activeTab }) =
         showResults: false,
         score: 0,
       });
+    }
+  };
+
+  const handleNextResult = () => {
+    if (results?.quiz?.quiz && quizResultState.currentQuestion < results.quiz.quiz.length - 1) {
+      setQuizResultState(prev => ({
+        ...prev,
+        currentQuestion: prev.currentQuestion + 1,
+      }));
+    }
+  };
+
+  const handlePreviousResult = () => {
+    if (quizResultState.currentQuestion > 0) {
+      setQuizResultState(prev => ({
+        ...prev,
+        currentQuestion: prev.currentQuestion - 1,
+      }));
     }
   };
 
@@ -325,57 +352,80 @@ const ResultsSection: React.FC<ResultsSectionProps> = ({ results, activeTab }) =
                   </div>
 
                   <div className="space-y-6">
-                    {results.quiz.quiz.map((question, index) => (
-                      <Card key={index} className="p-6 bg-background/50 border border-border/50">
-                        <div className="flex items-start gap-4">
-                          <Badge
-                            variant={quizState.userAnswers[index] === question.correct_answer ? "default" : "destructive"}
-                            className="mt-1"
-                          >
-                            {quizState.userAnswers[index] === question.correct_answer ? (
-                              <CheckCircle className="h-3 w-3 mr-1" />
-                            ) : (
-                              <XCircle className="h-3 w-3 mr-1" />
-                            )}
-                            Q{index + 1}
-                          </Badge>
-                          <div className="flex-1">
-                            <h4 className="text-lg font-semibold mb-4 text-foreground">
-                              {question.question}
-                            </h4>
-                            <div className="space-y-2 mb-4">
-                              {question.options.map((option, optIndex) => (
-                                <div
-                                  key={optIndex}
-                                  className={`p-3 rounded-lg border transition-colors ${
-                                    option === question.correct_answer
-                                      ? "border-green-500 bg-green-50 text-green-700"
-                                      : option === quizState.userAnswers[index] && option !== question.correct_answer
-                                      ? "border-red-500 bg-red-50 text-red-700"
-                                      : "border-border bg-muted/30"
-                                  }`}
-                                >
-                                  <span className="text-sm font-medium mr-3">
-                                    {String.fromCharCode(65 + optIndex)}.
-                                  </span>
-                                  {option}
-                                  {option === question.correct_answer && (
-                                    <CheckCircle className="h-4 w-4 ml-2 inline text-green-600" />
-                                  )}
-                                  {option === quizState.userAnswers[index] && option !== question.correct_answer && (
-                                    <XCircle className="h-4 w-4 ml-2 inline text-red-600" />
-                                  )}
-                                </div>
-                              ))}
-                            </div>
-                            <div className="p-3 bg-muted/50 rounded-lg">
-                              <p className="text-sm font-medium text-blue-600 mb-1">Explanation:</p>
-                              <p className="text-sm text-muted-foreground">{question.explanation}</p>
+                    {(() => {
+                      const question = results.quiz.quiz[quizResultState.currentQuestion];
+                      const userAnswer = quizState.userAnswers[quizResultState.currentQuestion];
+                      const isCorrect = userAnswer === question.correct_answer;
+
+                      return (
+                        <Card className="p-6 bg-background/50 border border-border/50">
+                          <div className="flex items-start gap-4">
+                            <Badge
+                              variant={isCorrect ? "default" : "destructive"}
+                              className="mt-1"
+                            >
+                              {isCorrect ? (
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                              ) : (
+                                <XCircle className="h-3 w-3 mr-1" />
+                              )}
+                              Q{quizResultState.currentQuestion + 1}
+                            </Badge>
+                            <div className="flex-1">
+                              <h4 className="text-lg font-semibold mb-4 text-foreground">
+                                {question.question}
+                              </h4>
+                              <div className="space-y-2 mb-4">
+                                {question.options.map((option, optIndex) => (
+                                  <div
+                                    key={optIndex}
+                                    className={`p-3 rounded-lg border transition-colors ${
+                                      option === question.correct_answer
+                                        ? "border-green-500 bg-green-50 text-green-700"
+                                        : option === userAnswer && !isCorrect
+                                        ? "border-red-500 bg-red-50 text-red-700"
+                                        : "border-border bg-muted/30"
+                                    }`}
+                                  >
+                                    <span className="text-sm font-medium mr-3">
+                                      {String.fromCharCode(65 + optIndex)}.
+                                    </span>
+                                    {option}
+                                    {option === question.correct_answer && (
+                                      <CheckCircle className="h-4 w-4 ml-2 inline text-green-600" />
+                                    )}
+                                    {option === userAnswer && !isCorrect && (
+                                      <XCircle className="h-4 w-4 ml-2 inline text-red-600" />
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                              <div className="p-3 bg-muted/50 rounded-lg">
+                                <p className="text-sm font-medium text-blue-600 mb-1">Explanation:</p>
+                                <p className="text-sm text-muted-foreground">{question.explanation}</p>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </Card>
-                    ))}
+                        </Card>
+                      );
+                    })()}
+                  </div>
+
+                  <div className="flex justify-between mt-6">
+                    <Button
+                      variant="outline"
+                      onClick={handlePreviousResult}
+                      disabled={quizResultState.currentQuestion === 0}
+                    >
+                      Previous
+                    </Button>
+                    <Button
+                      variant="hero"
+                      onClick={handleNextResult}
+                      disabled={quizResultState.currentQuestion === results.quiz.quiz.length - 1}
+                    >
+                      Next
+                    </Button>
                   </div>
                 </Card>
               )}
@@ -582,57 +632,80 @@ const ResultsSection: React.FC<ResultsSectionProps> = ({ results, activeTab }) =
                       </div>
 
                       <div className="space-y-6">
-                        {results.quiz.quiz.map((question, index) => (
-                          <Card key={index} className="p-6 bg-background/50 border border-border/50">
-                            <div className="flex items-start gap-4">
-                              <Badge
-                                variant={quizState.userAnswers[index] === question.correct_answer ? "default" : "destructive"}
-                                className="mt-1"
-                              >
-                                {quizState.userAnswers[index] === question.correct_answer ? (
-                                  <CheckCircle className="h-3 w-3 mr-1" />
-                                ) : (
-                                  <XCircle className="h-3 w-3 mr-1" />
-                                )}
-                                Q{index + 1}
-                              </Badge>
-                              <div className="flex-1">
-                                <h4 className="text-lg font-semibold mb-4 text-foreground">
-                                  {question.question}
-                                </h4>
-                                <div className="space-y-2 mb-4">
-                                  {question.options.map((option, optIndex) => (
-                                    <div
-                                      key={optIndex}
-                                      className={`p-3 rounded-lg border transition-colors ${
-                                        option === question.correct_answer
-                                          ? "border-green-500 bg-green-50 text-green-700"
-                                          : option === quizState.userAnswers[index] && option !== question.correct_answer
-                                          ? "border-red-500 bg-red-50 text-red-700"
-                                          : "border-border bg-muted/30"
-                                      }`}
-                                    >
-                                      <span className="text-sm font-medium mr-3">
-                                        {String.fromCharCode(65 + optIndex)}.
-                                      </span>
-                                      {option}
-                                      {option === question.correct_answer && (
-                                        <CheckCircle className="h-4 w-4 ml-2 inline text-green-600" />
-                                      )}
-                                      {option === quizState.userAnswers[index] && option !== question.correct_answer && (
-                                        <XCircle className="h-4 w-4 ml-2 inline text-red-600" />
-                                      )}
-                                    </div>
-                                  ))}
-                                </div>
-                                <div className="p-3 bg-muted/50 rounded-lg">
-                                  <p className="text-sm font-medium text-blue-600 mb-1">Explanation:</p>
-                                  <p className="text-sm text-muted-foreground">{question.explanation}</p>
+                        {(() => {
+                          const question = results.quiz.quiz[quizResultState.currentQuestion];
+                          const userAnswer = quizState.userAnswers[quizResultState.currentQuestion];
+                          const isCorrect = userAnswer === question.correct_answer;
+
+                          return (
+                            <Card className="p-6 bg-background/50 border border-border/50">
+                              <div className="flex items-start gap-4">
+                                <Badge
+                                  variant={isCorrect ? "default" : "destructive"}
+                                  className="mt-1"
+                                >
+                                  {isCorrect ? (
+                                    <CheckCircle className="h-3 w-3 mr-1" />
+                                  ) : (
+                                    <XCircle className="h-3 w-3 mr-1" />
+                                  )}
+                                  Q{quizResultState.currentQuestion + 1}
+                                </Badge>
+                                <div className="flex-1">
+                                  <h4 className="text-lg font-semibold mb-4 text-foreground">
+                                    {question.question}
+                                  </h4>
+                                  <div className="space-y-2 mb-4">
+                                    {question.options.map((option, optIndex) => (
+                                      <div
+                                        key={optIndex}
+                                        className={`p-3 rounded-lg border transition-colors ${
+                                          option === question.correct_answer
+                                            ? "border-green-500 bg-green-50 text-green-700"
+                                            : option === userAnswer && !isCorrect
+                                            ? "border-red-500 bg-red-50 text-red-700"
+                                            : "border-border bg-muted/30"
+                                        }`}
+                                      >
+                                        <span className="text-sm font-medium mr-3">
+                                          {String.fromCharCode(65 + optIndex)}.
+                                        </span>
+                                        {option}
+                                        {option === question.correct_answer && (
+                                          <CheckCircle className="h-4 w-4 ml-2 inline text-green-600" />
+                                        )}
+                                        {option === userAnswer && !isCorrect && (
+                                          <XCircle className="h-4 w-4 ml-2 inline text-red-600" />
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                  <div className="p-3 bg-muted/50 rounded-lg">
+                                    <p className="text-sm font-medium text-blue-600 mb-1">Explanation:</p>
+                                    <p className="text-sm text-muted-foreground">{question.explanation}</p>
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          </Card>
-                        ))}
+                            </Card>
+                          );
+                        })()}
+                      </div>
+
+                      <div className="flex justify-between mt-6">
+                        <Button
+                          variant="outline"
+                          onClick={handlePreviousResult}
+                          disabled={quizResultState.currentQuestion === 0}
+                        >
+                          Previous
+                        </Button>
+                        <Button
+                          variant="hero"
+                          onClick={handleNextResult}
+                          disabled={quizResultState.currentQuestion === results.quiz.quiz.length - 1}
+                        >
+                          Next
+                        </Button>
                       </div>
                     </Card>
                   )}
