@@ -5,11 +5,13 @@ from typing import List, Optional, Dict, Any
 
 # Text Summarization Schemas
 class SummarizeTextInput(BaseModel):
-    text: str = Field(..., description="Text content to be summarized", min_length=1)
+    text: Optional[str] = Field(None, description="Text content to be summarized", min_length=1)
+    youtubeUrl: Optional[str] = Field(None, description="YouTube URL to extract content from")
 
 
 class SummarizeContentInput(BaseModel):
     text: Optional[str] = Field(None, description="Text content to be summarized")
+    youtubeUrl: Optional[str] = Field(None, description="YouTube URL to extract content from")
     # Note: audio_file will be handled separately as it's a file upload
 
 
@@ -29,11 +31,13 @@ class MindmapNode(BaseModel):
 
 
 class MindmapInput(BaseModel):
-    topic: str = Field(..., description="Topic to generate mindmap for", min_length=1)
+    topic: Optional[str] = Field(None, description="Topic to generate mindmap for", min_length=1)
+    youtubeUrl: Optional[str] = Field(None, description="YouTube URL to extract content from")
 
 
 class MindmapMultimediaInput(BaseModel):
     topic: Optional[str] = Field(None, description="Topic to generate mindmap for")
+    youtubeUrl: Optional[str] = Field(None, description="YouTube URL to extract content from")
     # Note: audio_file, video_file, and document_file will be handled separately as file uploads
 
 
@@ -73,12 +77,14 @@ class MCQQuestion(BaseModel):
 
 
 class MCQQuizInput(BaseModel):
-    content: str = Field(..., description="Content to generate quiz from", min_length=1)
+    content: Optional[str] = Field(None, description="Content to generate quiz from", min_length=1)
+    youtubeUrl: Optional[str] = Field(None, description="YouTube URL to extract content from")
     num_questions: int = Field(default=10, ge=1, le=50, description="Number of questions to generate")
 
 
 class MCQQuizMultimediaInput(BaseModel):
     content: Optional[str] = Field(None, description="Content to generate quiz from")
+    youtubeUrl: Optional[str] = Field(None, description="YouTube URL to extract content from")
     num_questions: int = Field(default=10, ge=1, le=50, description="Number of questions to generate")
     # Note: audio_file, video_file, and document_file will be handled separately as file uploads
 
@@ -100,11 +106,13 @@ class Flashcard(BaseModel):
 
 
 class FlashcardInput(BaseModel):
-    content: str = Field(..., description="Content to generate flashcards from", min_length=1)
+    content: Optional[str] = Field(None, description="Content to generate flashcards from", min_length=1)
+    youtubeUrl: Optional[str] = Field(None, description="YouTube URL to extract content from")
 
 
 class FlashcardMultimediaInput(BaseModel):
     content: Optional[str] = Field(None, description="Content to generate flashcards from")
+    youtubeUrl: Optional[str] = Field(None, description="YouTube URL to extract content from")
     # Note: audio_file, video_file, and document_file will be handled separately as file uploads
 
 

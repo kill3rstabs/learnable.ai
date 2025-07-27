@@ -7,7 +7,14 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.output_parsers import StrOutputParser
 from dotenv import load_dotenv
-load_dotenv()
+import sys
+import os
+
+# Load the .env file from the project root
+dotenv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), '.env')
+print(f"Loading .env from {dotenv_path}")
+load_dotenv(dotenv_path=dotenv_path, verbose=True)
+print(f"GOOGLE_API_KEY present: {'GOOGLE_API_KEY' in os.environ}")
 
 
 class GeminiService:

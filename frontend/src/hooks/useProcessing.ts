@@ -4,11 +4,11 @@
 import { useState, useCallback } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { useApiKey } from './useApiKey';
-import { useFileUpload } from './useFileUpload';
 import apiClient from '@/lib/api';
 import { PROCESSING_STATES, ERROR_MESSAGES } from '@/lib/constants';
 import type { 
   ProcessingStatus, 
+  ProcessingState,
   ProcessingResults, 
   SummarizeTextInput,
   MindmapInput,
@@ -17,8 +17,8 @@ import type {
   UploadedFile
 } from '@/lib/types';
 
-export const useProcessing = (uploadedFiles: UploadedFile[] = []) => {
-  const [processingStatus, setProcessingStatus] = useState<ProcessingStatus>({
+const useProcessing = (uploadedFiles: UploadedFile[] = []) => {
+  const [processingStatus, setProcessingStatus] = useState<ProcessingState>({
     state: PROCESSING_STATES.IDLE,
     progress: 0,
     message: '',
@@ -26,11 +26,10 @@ export const useProcessing = (uploadedFiles: UploadedFile[] = []) => {
 
   const [results, setResults] = useState<ProcessingResults | null>(null);
   const { validateApiKey } = useApiKey();
-  const { updateFileStatus } = useFileUpload();
 
   // Update processing status
   const updateStatus = useCallback((
-    state: ProcessingStatus['state'],
+    state: ProcessingStatus,
     progress?: number,
     message?: string,
     error?: string
@@ -57,106 +56,18 @@ export const useProcessing = (uploadedFiles: UploadedFile[] = []) => {
   // Text summarization mutation
   const summarizeTextMutation = useMutation({
     mutationFn: async (input: SummarizeTextInput) => {
-      validateApiKey();
       updateStatus(PROCESSING_STATES.PROCESSING, 0, 'Generating summary...');
-      return apiClient.summarizeText(input);
-    },
-    onSuccess: (data) => {
-      setResults(prev => ({
-        ...prev,
-        summary: data,
-        content_type: 'text',
-      }));
-      updateStatus(PROCESSING_STATES.SUCCESS, 100, 'Summary generated successfully!');
-    },
-    onError: (error: Error) => {
-      updateStatus(PROCESSING_STATES.ERROR, 0, '', error.message);
-    },
-  });
-
-  // Multimedia processing mutation
-  const processMultimediaMutation = useMutation({
-    mutationFn: async (text?: string) => {
-      validateApiKey();
-      
-      const audioFiles = uploadedFiles.filter(f => 
-        ['.mp3', '.wav', '.m4a', '.flac', '.aac', '.ogg'].includes(f.extension)
-      );
-      const videoFiles = uploadedFiles.filter(f => 
-        ['.mp4', '.avi', '.mov', '.mkv', '.wmv', '.flv', '.webm', '.m4v'].includes(f.extension)
-      );
-      const documentFiles = uploadedFiles.filter(f => 
-        ['.pdf', '.docx', '.doc'].includes(f.extension)
-      );
-
-      if (audioFiles.length === 0 && videoFiles.length === 0 && documentFiles.length === 0 && !text) {
-        throw new Error('No files or text provided for processing');
-      }
-
-      updateStatus(PROCESSING_STATES.PROCESSING, 0, 'Processing your content...');
-
-      const audioFile = audioFiles[0]?.file;
-      const videoFile = videoFiles[0]?.file;
-      const documentFile = documentFiles[0]?.file;
-
-      return apiClient.processMultimedia(
-        audioFile,
-        videoFile,
-        documentFile,
-        text,
-        (progress) => {
-          updateStatus(PROCESSING_STATES.PROCESSING, progress, 'Processing your content...');
-        }
-      );
+      return apiClient.summarizeContent(input);
     },
     onSuccess: (data) => {
       setResults({
-        summary: data.summary,
-        mindmap: data.mindmap,
-        quiz: data.quiz,
-        flashcards: data.flashcards,
-        content_type: data.summary.content_type,
-        original_file: uploadedFiles[0] || undefined,
+        id: Date.now().toString(),
+        type: 'summary',
+        data: data.data,
+        createdAt: new Date().toISOString(),
+        status: 'completed',
+        summary: data.data,
       });
-      updateStatus(PROCESSING_STATES.SUCCESS, 100, 'All resources generated successfully!');
-    },
-    onError: (error: Error) => {
-      updateStatus(PROCESSING_STATES.ERROR, 0, '', error.message);
-    },
-  });
-
-  // Individual processing mutations
-  const summarizeMultimediaMutation = useMutation({
-    mutationFn: async (text?: string) => {
-      validateApiKey();
-      updateStatus(PROCESSING_STATES.PROCESSING, 0, 'Generating summary...');
-      
-      const audioFile = uploadedFiles.find(f => 
-        ['.mp3', '.wav', '.m4a', '.flac', '.aac', '.ogg'].includes(f.extension)
-      )?.file;
-      const videoFile = uploadedFiles.find(f => 
-        ['.mp4', '.avi', '.mov', '.mkv', '.wmv', '.flv', '.webm', '.m4v'].includes(f.extension)
-      )?.file;
-      const documentFile = uploadedFiles.find(f => 
-        ['.pdf', '.docx', '.doc'].includes(f.extension)
-      )?.file;
-
-      return apiClient.summarizeMultimedia(
-        audioFile,
-        videoFile,
-        documentFile,
-        text,
-        (progress) => {
-          updateStatus(PROCESSING_STATES.PROCESSING, progress, 'Generating summary...');
-        }
-      );
-    },
-    onSuccess: (data) => {
-      setResults(prev => ({
-        ...prev,
-        summary: data,
-        content_type: data.content_type,
-      }));
       updateStatus(PROCESSING_STATES.SUCCESS, 100, 'Summary generated successfully!');
     },
     onError: (error: Error) => {
@@ -164,91 +75,51 @@ export const useProcessing = (uploadedFiles: UploadedFile[] = []) => {
     },
   });
 
+  // Mindmap generation mutation
   const generateMindmapMutation = useMutation({
-    mutationFn: async (input: MindmapInput | string | undefined) => {
-      validateApiKey();
+    mutationFn: async (input: MindmapInput) => {
       updateStatus(PROCESSING_STATES.PROCESSING, 0, 'Generating mindmap...');
-      
-      if (typeof input === 'object') {
-        // Text mindmap
-        return apiClient.generateMindmap(input);
-      } else {
-        // Multimedia mindmap
-        const audioFile = uploadedFiles.find(f => 
-          ['.mp3', '.wav', '.m4a', '.flac', '.aac', '.ogg'].includes(f.extension)
-        )?.file;
-        const videoFile = uploadedFiles.find(f => 
-          ['.mp4', '.avi', '.mov', '.mkv', '.wmv', '.flv', '.webm', '.m4v'].includes(f.extension)
-        )?.file;
-        const documentFile = uploadedFiles.find(f => 
-          ['.pdf', '.docx', '.doc'].includes(f.extension)
-        )?.file;
-
-        return apiClient.generateMindmapMultimedia(
-          audioFile,
-          videoFile,
-          documentFile,
-          input,
-          (progress) => {
-            updateStatus(PROCESSING_STATES.PROCESSING, progress, 'Generating mindmap...');
-          }
-        );
-      }
+      return apiClient.createMindmap(input);
     },
     onSuccess: (data) => {
-      setResults(prev => ({
-        ...prev,
-        mindmap: data,
-        content_type: data.content_type,
-      }));
+      console.log("Mindmap data received:", data);
+      
+      if (!data.success || !data.data) {
+        updateStatus(PROCESSING_STATES.ERROR, 0, '', 'Invalid response from server');
+        return;
+      }
+      
+      setResults({
+        id: Date.now().toString(),
+        type: 'mindmap',
+        data: data.data,
+        createdAt: new Date().toISOString(),
+        status: 'completed',
+        mindmap: data.data,
+      });
       updateStatus(PROCESSING_STATES.SUCCESS, 100, 'Mindmap generated successfully!');
     },
     onError: (error: Error) => {
+      console.error("Mindmap generation error:", error);
       updateStatus(PROCESSING_STATES.ERROR, 0, '', error.message);
     },
   });
 
+  // Quiz generation mutation
   const generateQuizMutation = useMutation({
-    mutationFn: async (input: MCQQuizInput | { content?: string; numQuestions: number }) => {
-      validateApiKey();
-      updateStatus(PROCESSING_STATES.PROCESSING, 0, 'Generating quiz questions...');
-      
-      if ('content' in input && input.content && input.content.trim()) {
-        // Text quiz
-        return apiClient.generateMCQQuiz({
-          content: input.content,
-          num_questions: 'numQuestions' in input ? input.numQuestions : 10,
-        });
-      } else {
-        // Multimedia quiz
-        const audioFile = uploadedFiles.find(f => 
-          ['.mp3', '.wav', '.m4a', '.flac', '.aac', '.ogg'].includes(f.extension)
-        )?.file;
-        const videoFile = uploadedFiles.find(f => 
-          ['.mp4', '.avi', '.mov', '.mkv', '.wmv', '.flv', '.webm', '.m4v'].includes(f.extension)
-        )?.file;
-        const documentFile = uploadedFiles.find(f => 
-          ['.pdf', '.docx', '.doc'].includes(f.extension)
-        )?.file;
-
-        return apiClient.generateMCQQuizMultimedia(
-          audioFile,
-          videoFile,
-          documentFile,
-          input.content,
-          'numQuestions' in input ? input.numQuestions : 10,
-          (progress) => {
-            updateStatus(PROCESSING_STATES.PROCESSING, progress, 'Generating quiz questions...');
-          }
-        );
-      }
+    mutationFn: async (input: MCQQuizInput) => {
+      updateStatus(PROCESSING_STATES.PROCESSING, 0, 'Generating quiz...');
+      return apiClient.createMCQQuiz(input);
     },
     onSuccess: (data) => {
-      setResults(prev => ({
-        ...prev,
-        quiz: data,
-        content_type: data.content_type,
-      }));
+      setResults({
+        id: Date.now().toString(),
+        type: 'quiz',
+        data: data.data,
+        createdAt: new Date().toISOString(),
+        status: 'completed',
+        quiz: data.data,
+      });
       updateStatus(PROCESSING_STATES.SUCCESS, 100, 'Quiz generated successfully!');
     },
     onError: (error: Error) => {
@@ -256,66 +127,106 @@ export const useProcessing = (uploadedFiles: UploadedFile[] = []) => {
     },
   });
 
+  // Flashcards generation mutation
   const generateFlashcardsMutation = useMutation({
-    mutationFn: async (input: FlashcardInput | string) => {
-      validateApiKey();
+    mutationFn: async (input: FlashcardInput) => {
       updateStatus(PROCESSING_STATES.PROCESSING, 0, 'Generating flashcards...');
-      
-      if (typeof input === 'string') {
-        // Multimedia flashcards
-        const audioFile = uploadedFiles.find(f => 
-          ['.mp3', '.wav', '.m4a', '.flac', '.aac', '.ogg'].includes(f.extension)
-        )?.file;
-        const videoFile = uploadedFiles.find(f => 
-          ['.mp4', '.avi', '.mov', '.mkv', '.wmv', '.flv', '.webm', '.m4v'].includes(f.extension)
-        )?.file;
-        const documentFile = uploadedFiles.find(f => 
-          ['.pdf', '.docx', '.doc'].includes(f.extension)
-        )?.file;
-
-        return apiClient.generateFlashcardsMultimedia(
-          audioFile,
-          videoFile,
-          documentFile,
-          input,
-          (progress) => {
-            updateStatus(PROCESSING_STATES.PROCESSING, progress, 'Generating flashcards...');
-          }
-        );
-      } else {
-        // Text flashcards
-        return apiClient.generateFlashcards(input);
-      }
+      return apiClient.createFlashcards(input);
     },
     onSuccess: (data) => {
-      setResults(prev => ({
-        ...prev,
-        flashcards: data,
-        content_type: data.content_type,
-      }));
+      console.log("Flashcards data received:", data);
+      
+      if (!data.success || !data.data) {
+        updateStatus(PROCESSING_STATES.ERROR, 0, '', 'Invalid response from server');
+        return;
+      }
+      
+      // Process flashcards data
+      const flashcardsData = data.data;
+      
+      // Check if we need to transform the data format
+      let formattedData = flashcardsData;
+      
+      // Convert simple array format to the expected structure if needed
+      if (Array.isArray(flashcardsData)) {
+        formattedData = {
+          total_cards: flashcardsData.length,
+          flashcards: flashcardsData.map(card => {
+            // If already in correct format
+            if (card.front && card.back) {
+              return card;
+            }
+            // Transform from Q&A format if needed
+            if (card.question && card.answer) {
+              return {
+                front: card.question,
+                back: card.answer,
+                category: card.category || "General",
+                difficulty: card.difficulty || "Medium"
+              };
+            }
+            // Default format if structure is unknown
+            return {
+              front: Object.keys(card)[0] || "Question",
+              back: Object.values(card)[0] || "Answer",
+              category: "General",
+              difficulty: "Medium"
+            };
+          })
+        };
+      }
+      
+      setResults({
+        id: Date.now().toString(),
+        type: 'flashcards',
+        data: data.data,
+        createdAt: new Date().toISOString(),
+        status: 'completed',
+        flashcards: formattedData,
+      });
       updateStatus(PROCESSING_STATES.SUCCESS, 100, 'Flashcards generated successfully!');
     },
     onError: (error: Error) => {
+      console.error("Flashcards generation error:", error);
       updateStatus(PROCESSING_STATES.ERROR, 0, '', error.message);
     },
   });
 
-  // Cancel processing
-  const cancelProcessing = useCallback(() => {
-    updateStatus(PROCESSING_STATES.IDLE, 0, 'Processing cancelled');
-  }, [updateStatus]);
+  // Exported functions
+  const summarizeText = useCallback(
+    (input: SummarizeTextInput) => summarizeTextMutation.mutate(input),
+    [summarizeTextMutation]
+  );
+
+  const generateMindmap = useCallback(
+    (input: MindmapInput) => generateMindmapMutation.mutate(input),
+    [generateMindmapMutation]
+  );
+
+  const generateQuiz = useCallback(
+    (input: MCQQuizInput) => generateQuizMutation.mutate(input),
+    [generateQuizMutation]
+  );
+
+  const generateFlashcards = useCallback(
+    (input: FlashcardInput) => generateFlashcardsMutation.mutate(input),
+    [generateFlashcardsMutation]
+  );
 
   return {
     processingStatus,
     results,
-    updateStatus,
+    summarizeText,
+    generateMindmap,
+    generateQuiz,
+    generateFlashcards,
     resetProcessing,
-    cancelProcessing,
-    summarizeTextMutation,
-    processMultimediaMutation,
-    summarizeMultimediaMutation,
-    generateMindmapMutation,
-    generateQuizMutation,
-    generateFlashcardsMutation,
+    updateStatus,
+    isProcessing: processingStatus.state === PROCESSING_STATES.PROCESSING,
+    isIdle: processingStatus.state === PROCESSING_STATES.IDLE,
+    hasResults: !!results,
   };
-}; 
+};
+
+export { useProcessing };
+export default useProcessing;

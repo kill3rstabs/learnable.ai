@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Upload, Link, Type, Play, FileText, AlertTriangle, Loader2 } from "lucide-react";
+import { Upload, Link, Type, Play, FileText, AlertTriangle, Loader2, Layers } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useApiKey } from "@/hooks/useApiKey";
 import FileUpload from "@/components/ui/file-upload";
@@ -27,11 +27,11 @@ const InputSection: React.FC<InputSectionProps> = ({
   removeFile,
   clearFiles,
   processingStatus,
-  summarizeTextMutation,
-  processMultimediaMutation,
-  summarizeMultimediaMutation,
-  generateMindmapMutation,
-  generateQuizMutation,
+  summarizeText,
+  generateMindmap,
+  generateQuiz,
+  generateFlashcards,
+  isProcessing,
 }) => {
   const [activeTab, setActiveTab] = useState("text");
   const [textInput, setTextInput] = useState("");
@@ -54,7 +54,7 @@ const InputSection: React.FC<InputSectionProps> = ({
 
     try {
       validateApiKey();
-      summarizeTextMutation.mutate({ text: textInput });
+      summarizeText({ text: textInput });
     } catch (error) {
       toast({
         title: "Error",
@@ -77,7 +77,10 @@ const InputSection: React.FC<InputSectionProps> = ({
 
     try {
       validateApiKey();
-      processMultimediaMutation.mutate(undefined);
+      // Process the uploaded file for summarization
+      summarizeText({ 
+        files: uploadedFiles.map(file => ({ file: file.file }))
+      });
     } catch (error) {
       toast({
         title: "Error",
@@ -87,7 +90,7 @@ const InputSection: React.FC<InputSectionProps> = ({
     }
   };
 
-  // Handle URL processing (placeholder for future implementation)
+  // Handle URL processing
   const handleUrlProcess = () => {
     if (!urlInput.trim()) {
       toast({
@@ -98,14 +101,35 @@ const InputSection: React.FC<InputSectionProps> = ({
       return;
     }
 
-    toast({
-      title: "URL Processing",
-      description: "URL processing will be implemented in a future update.",
-    });
+    try {
+      validateApiKey();
+      
+      // Check if it's a YouTube URL
+      const isYouTubeUrl = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)/.test(urlInput);
+      
+      if (isYouTubeUrl) {
+        // Process YouTube URL
+        summarizeText({ youtubeUrl: urlInput });
+        toast({
+          title: "Processing YouTube Video",
+          description: "Extracting and analyzing video content...",
+        });
+      } else {
+        // Process other URLs
+        toast({
+          title: "Processing URL",
+          description: "Extracting and analyzing content from the provided URL...",
+        });
+        summarizeText({ text: urlInput });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "An error occurred",
+        variant: "destructive",
+      });
+    }
   };
-
-  // Check if processing is in progress
-  const isProcessing = processingStatus.state === 'processing' || processingStatus.state === 'uploading';
 
   return (
     <section className="py-16 bg-muted/30">
@@ -166,7 +190,7 @@ const InputSection: React.FC<InputSectionProps> = ({
                   disabled={!textInput.trim() || !hasApiKey || isProcessing}
                   onClick={handleTextProcess}
                 >
-                  {summarizeTextMutation.isPending ? (
+                  {isProcessing ? (
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   ) : (
                     <Type className="h-4 w-4 mr-2" />
@@ -178,9 +202,9 @@ const InputSection: React.FC<InputSectionProps> = ({
                   size="lg" 
                   className="flex-1" 
                   disabled={!textInput.trim() || !hasApiKey || isProcessing}
-                  onClick={() => generateMindmapMutation.mutate({ topic: textInput })}
+                  onClick={() => generateMindmap({ topic: textInput })}
                 >
-                  {generateMindmapMutation.isPending ? (
+                  {isProcessing ? (
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   ) : (
                     <FileText className="h-4 w-4 mr-2" />
@@ -192,14 +216,28 @@ const InputSection: React.FC<InputSectionProps> = ({
                   size="lg" 
                   className="flex-1" 
                   disabled={!textInput.trim() || !hasApiKey || isProcessing}
-                  onClick={() => generateQuizMutation.mutate({ content: textInput, num_questions: 10 })}
+                  onClick={() => generateQuiz({ content: textInput, num_questions: 10 })}
                 >
-                  {generateQuizMutation.isPending ? (
+                  {isProcessing ? (
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   ) : (
                     <Play className="h-4 w-4 mr-2" />
                   )}
                   Generate Quiz
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="lg" 
+                  className="flex-1" 
+                  disabled={!textInput.trim() || !hasApiKey || isProcessing}
+                  onClick={() => generateFlashcards({ content: textInput })}
+                >
+                  {isProcessing ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Layers className="h-4 w-4 mr-2" />
+                  )}
+                  Create Flashcards
                 </Button>
               </div>
             </TabsContent>
@@ -215,8 +253,7 @@ const InputSection: React.FC<InputSectionProps> = ({
                 onDrop={handleDrop}
                 fileInputRef={fileInputRef}
                 onFileInputChange={handleFileInputChange}
-                acceptedTypes={SUPPORTED_FILE_TYPES.ALL}
-                multiple={true}
+                acceptedFileTypes={SUPPORTED_FILE_TYPES.ALL}
                 disabled={isProcessing}
               />
               
@@ -235,9 +272,9 @@ const InputSection: React.FC<InputSectionProps> = ({
                   size="lg" 
                   className="flex-1" 
                   disabled={!hasApiKey || isProcessing || uploadedFiles.length === 0}
-                  onClick={() => summarizeMultimediaMutation.mutate(undefined)}
+                  onClick={handleFileProcess}
                 >
-                  {summarizeMultimediaMutation.isPending ? (
+                  {isProcessing ? (
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   ) : (
                     <Type className="h-4 w-4 mr-2" />
@@ -249,9 +286,11 @@ const InputSection: React.FC<InputSectionProps> = ({
                   size="lg" 
                   className="flex-1" 
                   disabled={!hasApiKey || isProcessing || uploadedFiles.length === 0}
-                  onClick={() => generateMindmapMutation.mutate(undefined)}
+                  onClick={() => generateMindmap({ 
+                    files: uploadedFiles.map(file => ({ file: file.file }))
+                  })}
                 >
-                  {generateMindmapMutation.isPending ? (
+                  {isProcessing ? (
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   ) : (
                     <FileText className="h-4 w-4 mr-2" />
@@ -263,14 +302,33 @@ const InputSection: React.FC<InputSectionProps> = ({
                   size="lg" 
                   className="flex-1" 
                   disabled={!hasApiKey || isProcessing || uploadedFiles.length === 0}
-                  onClick={() => generateQuizMutation.mutate({ content: undefined, numQuestions: 10 })}
+                  onClick={() => generateQuiz({ 
+                    files: uploadedFiles.map(file => ({ file: file.file })),
+                    num_questions: 10
+                  })}
                 >
-                  {generateQuizMutation.isPending ? (
+                  {isProcessing ? (
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   ) : (
                     <Play className="h-4 w-4 mr-2" />
                   )}
                   Generate Quiz
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="lg" 
+                  className="flex-1" 
+                  disabled={!hasApiKey || isProcessing || uploadedFiles.length === 0}
+                  onClick={() => generateFlashcards({ 
+                    files: uploadedFiles.map(file => ({ file: file.file }))
+                  })}
+                >
+                  {isProcessing ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Layers className="h-4 w-4 mr-2" />
+                  )}
+                  Create Flashcards
                 </Button>
               </div>
             </TabsContent>
@@ -302,16 +360,64 @@ const InputSection: React.FC<InputSectionProps> = ({
                 </div>
               )}
               
-              <Button 
-                variant="outline" 
-                size="lg" 
-                className="w-full"
-                disabled={!urlInput.trim() || !hasApiKey || isProcessing}
-                onClick={handleUrlProcess}
-              >
-                <Play className="h-5 w-5" />
-                Process Link
-              </Button>
+              <div className="flex gap-3">
+                <Button 
+                  variant="outline" 
+                  size="lg" 
+                  className="flex-1"
+                  disabled={!urlInput.trim() || !hasApiKey || isProcessing}
+                  onClick={handleUrlProcess}
+                >
+                  {isProcessing ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Type className="h-4 w-4 mr-2" />
+                  )}
+                  Generate Summary
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="lg" 
+                  className="flex-1"
+                  disabled={!urlInput.trim() || !hasApiKey || isProcessing}
+                  onClick={() => generateMindmap({ youtubeUrl: urlInput })}
+                >
+                  {isProcessing ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <FileText className="h-4 w-4 mr-2" />
+                  )}
+                  Create Mindmap
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="lg" 
+                  className="flex-1"
+                  disabled={!urlInput.trim() || !hasApiKey || isProcessing}
+                  onClick={() => generateQuiz({ youtubeUrl: urlInput, num_questions: 10 })}
+                >
+                  {isProcessing ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Play className="h-4 w-4 mr-2" />
+                  )}
+                  Generate Quiz
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="lg" 
+                  className="flex-1"
+                  disabled={!urlInput.trim() || !hasApiKey || isProcessing}
+                  onClick={() => generateFlashcards({ youtubeUrl: urlInput })}
+                >
+                  {isProcessing ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Layers className="h-4 w-4 mr-2" />
+                  )}
+                  Create Flashcards
+                </Button>
+              </div>
             </TabsContent>
           </Tabs>
         </Card>

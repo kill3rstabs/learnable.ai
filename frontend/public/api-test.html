@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learnable.AI API Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+        h1, h2 {
+            color: #2563eb;
+        }
+        button {
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #1d4ed8;
+        }
+        .results {
+            margin-top: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            max-height: 400px;
+            overflow: auto;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .error {
+            color: #dc2626;
+            font-weight: bold;
+        }
+        .success {
+            color: #16a34a;
+            font-weight: bold;
+        }
+        textarea {
+            width: 100%;
+            height: 100px;
+            margin-bottom: 10px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .test-group {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <h1>Learnable.AI API Test</h1>
+    
+    <div class="test-group">
+        <h2>1. Mindmap Generation Test</h2>
+        <textarea id="mindmap-topic" placeholder="Enter a topic for mindmap generation...">Machine Learning Fundamentals</textarea>
+        <button id="test-mindmap">Generate Mindmap</button>
+        <div id="mindmap-results" class="results">Results will appear here...</div>
+    </div>
+
+    <div class="test-group">
+        <h2>2. YouTube Processing Test</h2>
+        <textarea id="youtube-url" placeholder="Enter a YouTube URL...">https://www.youtube.com/watch?v=aircAruvnKk</textarea>
+        <button id="test-youtube">Process YouTube</button>
+        <div id="youtube-results" class="results">Results will appear here...</div>
+    </div>
+
+    <div class="test-group">
+        <h2>3. Flashcards Generation Test</h2>
+        <textarea id="flashcard-content" placeholder="Enter content for flashcards...">Machine Learning is a subset of artificial intelligence that provides systems the ability to automatically learn and improve from experience without being explicitly programmed.</textarea>
+        <button id="test-flashcards">Generate Flashcards</button>
+        <div id="flashcard-results" class="results">Results will appear here...</div>
+    </div>
+
+    <script>
+        // Define API endpoints
+        const API_BASE_URL = 'http://127.0.0.1:8000/api';
+        
+        // Test mindmap generation
+        document.getElementById('test-mindmap').addEventListener('click', async () => {
+            const resultsDiv = document.getElementById('mindmap-results');
+            const topic = document.getElementById('mindmap-topic').value.trim();
+            
+            if (!topic) {
+                resultsDiv.innerHTML = '<span class="error">Please enter a topic</span>';
+                return;
+            }
+            
+            resultsDiv.innerHTML = '<div class="loading"></div> Processing...';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/learning/generate-mindmap`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ topic })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultsDiv.innerHTML = `
+                        <span class="success">Success!</span>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                    console.log('Mindmap data:', data);
+                } else {
+                    resultsDiv.innerHTML = `<span class="error">Error: ${data.error || response.statusText}</span>`;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<span class="error">Network error: ${error.message}</span>`;
+                console.error('API call failed:', error);
+            }
+        });
+        
+        // Test YouTube processing
+        document.getElementById('test-youtube').addEventListener('click', async () => {
+            const resultsDiv = document.getElementById('youtube-results');
+            const youtubeUrl = document.getElementById('youtube-url').value.trim();
+            
+            if (!youtubeUrl) {
+                resultsDiv.innerHTML = '<span class="error">Please enter a YouTube URL</span>';
+                return;
+            }
+            
+            resultsDiv.innerHTML = '<div class="loading"></div> Processing...';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/learning/generate-mindmap-multimedia`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ youtubeUrl })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultsDiv.innerHTML = `
+                        <span class="success">Success!</span>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                    console.log('YouTube data:', data);
+                } else {
+                    resultsDiv.innerHTML = `<span class="error">Error: ${data.error || response.statusText}</span>`;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<span class="error">Network error: ${error.message}</span>`;
+                console.error('API call failed:', error);
+            }
+        });
+        
+        // Test flashcards generation
+        document.getElementById('test-flashcards').addEventListener('click', async () => {
+            const resultsDiv = document.getElementById('flashcard-results');
+            const content = document.getElementById('flashcard-content').value.trim();
+            
+            if (!content) {
+                resultsDiv.innerHTML = '<span class="error">Please enter content for flashcards</span>';
+                return;
+            }
+            
+            resultsDiv.innerHTML = '<div class="loading"></div> Processing...';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/learning/generate-flashcards`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ content, num_cards: 5 })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultsDiv.innerHTML = `
+                        <span class="success">Success!</span>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                    console.log('Flashcards data:', data);
+                } else {
+                    resultsDiv.innerHTML = `<span class="error">Error: ${data.error || response.statusText}</span>`;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<span class="error">Network error: ${error.message}</span>`;
+                console.error('API call failed:', error);
+            }
+        });
+    </script>
+</body>
+</html>

@@ -21,7 +21,8 @@ class LearningService:
     
     def generate_mindmap_from_multimedia(
         self, 
-        topic: Optional[str] = None, 
+        topic: Optional[str] = None,
+        youtube_url: Optional[str] = None,
         audio_file: Optional[UploadedFile] = None, 
         video_file: Optional[UploadedFile] = None,
         document_file: Optional[UploadedFile] = None,
@@ -50,11 +51,16 @@ class LearningService:
                 if error:
                     return {"success": False, "error": error}
                 content_type = "document"
+            elif youtube_url:
+                content, error = media_processor.extract_content_from_youtube(youtube_url)
+                if error:
+                    return {"success": False, "error": error}
+                content_type = "youtube"
             elif topic and topic.strip():
                 content = topic
                 content_type = "text"
             else:
-                return {"success": False, "error": "Either topic, audio file, video file, or document file must be provided"}
+                return {"success": False, "error": "Either topic, YouTube URL, audio file, video file, or document file must be provided"}
             
             # Generate mindmap
             mindmap_json = self.gemini_service.run_prompt(MINDMAP_GENERATION_PROMPT, content)
@@ -95,6 +101,7 @@ class LearningService:
         self, 
         content: Optional[str] = None, 
         num_questions: int = 10,
+        youtube_url: Optional[str] = None,
         audio_file: Optional[UploadedFile] = None, 
         video_file: Optional[UploadedFile] = None,
         document_file: Optional[UploadedFile] = None,
@@ -123,11 +130,16 @@ class LearningService:
                 if error:
                     return {"success": False, "error": error}
                 content_type = "document"
+            elif youtube_url:
+                content_text, error = media_processor.extract_content_from_youtube(youtube_url)
+                if error:
+                    return {"success": False, "error": error}
+                content_type = "youtube"
             elif content and content.strip():
                 content_text = content
                 content_type = "text"
             else:
-                return {"success": False, "error": "Either content, audio file, video file, or document file must be provided"}
+                return {"success": False, "error": "Either content, YouTube URL, audio file, video file, or document file must be provided"}
             
             # Use structured output for MCQ generation
             structured_llm = self.gemini_service.llm.with_structured_output(MCQQuizStructuredOutput)
@@ -172,6 +184,7 @@ class LearningService:
     def generate_flashcards_from_multimedia(
         self, 
         content: Optional[str] = None,
+        youtube_url: Optional[str] = None,
         audio_file: Optional[UploadedFile] = None, 
         video_file: Optional[UploadedFile] = None,
         document_file: Optional[UploadedFile] = None,
@@ -200,11 +213,16 @@ class LearningService:
                 if error:
                     return {"success": False, "error": error}
                 content_type = "document"
+            elif youtube_url:
+                content_text, error = media_processor.extract_content_from_youtube(youtube_url)
+                if error:
+                    return {"success": False, "error": error}
+                content_type = "youtube"
             elif content and content.strip():
                 content_text = content
                 content_type = "text"
             else:
-                return {"success": False, "error": "Either content, audio file, video file, or document file must be provided"}
+                return {"success": False, "error": "Either content, YouTube URL, audio file, video file, or document file must be provided"}
             
             flashcards_json = self.gemini_service.run_prompt(FLASHCARD_GENERATION_PROMPT, content_text)
             

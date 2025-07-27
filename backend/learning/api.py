@@ -50,11 +50,9 @@ def summarize_content(
     document_file: Optional[UploadedFile] = File(None)
 ):
     """
-    Summarize content using Gemini API - accepts text, audio, video, and document files
+    Summarize content using Gemini API - accepts text, audio, video, document files, and YouTube URLs
     """
     try:
-
-        
         content_type = None
         content_text = ""
         summary = None
@@ -63,6 +61,12 @@ def summarize_content(
             content_type = "text"
             content_text = data.text
             summary, error = media_processor.summarize_text(data.text)
+            if error:
+                return {"error": error}
+        # Handle YouTube URL
+        elif data and hasattr(data, "youtubeUrl") and data.youtubeUrl:
+            content_type = "youtube"
+            summary, error = media_processor.process_youtube_url(data.youtubeUrl)
             if error:
                 return {"error": error}
         # Handle audio input
@@ -84,7 +88,7 @@ def summarize_content(
             if error:
                 return {"error": error}
         else:
-            return {"error": "Either text content, audio file, video file, or document file must be provided"}
+            return {"error": "Either text content, YouTube URL, audio file, video file, or document file must be provided"}
         # Determine original text for response
         if content_type == "text":
             original_text = content_text
@@ -159,14 +163,14 @@ def generate_mindmap_multimedia(
     document_file: Optional[UploadedFile] = File(None)
 ):
     """
-    Generate mindmap JSON structure from multimedia content (text, audio, video, or document)
+    Generate mindmap JSON structure from multimedia content (text, audio, video, document, or YouTube)
     """
     try:
-
-        
         topic = data.topic if data else None
+        youtube_url = data.youtubeUrl if data and hasattr(data, "youtubeUrl") else None
         result = learning_service.generate_mindmap_from_multimedia(
             topic=topic,
+            youtube_url=youtube_url,
             audio_file=audio_file,
             video_file=video_file,
             document_file=document_file,
@@ -216,14 +220,16 @@ def generate_mcq_quiz_multimedia(
     document_file: Optional[UploadedFile] = File(None)
 ):
     """
-    Generate MCQ quiz questions from multimedia content (text, audio, video, or document)
+    Generate MCQ quiz questions from multimedia content (text, audio, video, document, or YouTube)
     """
     try:
         content = data.content if data else None
         num_questions = data.num_questions if data else 10
+        youtube_url = data.youtubeUrl if data and hasattr(data, "youtubeUrl") else None
         result = learning_service.generate_mcq_quiz_from_multimedia(
             content=content,
             num_questions=num_questions,
+            youtube_url=youtube_url,
             audio_file=audio_file,
             video_file=video_file,
             document_file=document_file,
@@ -274,12 +280,14 @@ def generate_flashcards_multimedia(
     document_file: Optional[UploadedFile] = File(None)
 ):
     """
-    Generate flashcards from multimedia content (text, audio, video, or document)
+    Generate flashcards from multimedia content (text, audio, video, document, or YouTube)
     """
     try:
         content = data.content if data else None
+        youtube_url = data.youtubeUrl if data and hasattr(data, "youtubeUrl") else None
         result = learning_service.generate_flashcards_from_multimedia(
             content=content,
+            youtube_url=youtube_url,
             audio_file=audio_file,
             video_file=video_file,
             document_file=document_file,

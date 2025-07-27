@@ -7,6 +7,7 @@ import { useProcessing } from "@/hooks/useProcessing";
 import { useToast } from "@/hooks/use-toast";
 import type { ProcessingResults } from "@/lib/types";
 import { useState, useEffect } from "react";
+import MindmapVisualization from "./MindmapVisualization";
 
 interface ResultsSectionProps {
   results?: ProcessingResults | null;
@@ -73,6 +74,8 @@ const ResultsSection: React.FC<ResultsSectionProps> = ({ results }) => {
     showResults: false,
     score: 0,
   });
+  const [isFlipped, setIsFlipped] = useState<{[key: number]: boolean}>({});
+  const [visibleFlashcards, setVisibleFlashcards] = useState<number>(12);
 
   // Initialize quiz state when results change
   useEffect(() => {
@@ -85,6 +88,23 @@ const ResultsSection: React.FC<ResultsSectionProps> = ({ results }) => {
       });
     }
   }, [results?.quiz]);
+  
+  // Toggle flashcard flip state
+  const toggleFlip = (index: number) => {
+    setIsFlipped(prev => ({
+      ...prev,
+      [index]: !prev[index]
+    }));
+  };
+  
+  // Load more flashcards
+  const loadMoreFlashcards = () => {
+    if (results?.flashcards) {
+      const totalCards = results.flashcards.total_cards;
+      const newVisible = Math.min(visibleFlashcards + 12, totalCards);
+      setVisibleFlashcards(newVisible);
+    }
+  };
 
   const handleAnswerSelect = (answer: string) => {
     if (results?.quiz?.quiz) {
@@ -217,7 +237,7 @@ const ResultsSection: React.FC<ResultsSectionProps> = ({ results }) => {
                       </Button>
                     </div>
                   </div>
-                  <div className="space-y-6">
+                  <div className="space-y-6 animate-in fade-in-50 duration-700">
                     <div className="bg-muted/50 p-4 rounded-lg">
                       <h4 className="font-semibold mb-2 text-foreground">Original Content</h4>
                       <p className="text-sm text-muted-foreground">
@@ -226,7 +246,7 @@ const ResultsSection: React.FC<ResultsSectionProps> = ({ results }) => {
                     </div>
                     <div>
                       <h4 className="font-semibold mb-4 text-foreground">Summary</h4>
-                      <div className="bg-background/50 p-6 rounded-lg border border-border/50">
+                      <div className="bg-background/50 p-6 rounded-lg border border-border/50 animate-in slide-in-from-bottom-3 duration-700" style={{ animationDelay: '300ms' }}>
                         <MarkdownRenderer content={results.summary.summary} />
                       </div>
                     </div>
@@ -418,31 +438,82 @@ const ResultsSection: React.FC<ResultsSectionProps> = ({ results }) => {
 
             <TabsContent value="flashcards">
               {results.flashcards ? (
-                <div className="grid md:grid-cols-2 gap-6">
-                  {results.flashcards.flashcards.map((card, index) => (
-                    <Card key={index} className="p-6 bg-gradient-card shadow-card border-0 hover:shadow-elevated transition-all duration-300 cursor-pointer group">
-                      <div className="text-center">
-                        <div className="mb-4">
-                          <Badge variant="outline" className="mb-4">
-                            Card {index + 1}
-                          </Badge>
-                          <Badge variant="secondary" className="ml-2">
-                            {card.category}
-                          </Badge>
-                          <Badge variant="outline" className="ml-2">
-                            {card.difficulty}
-                          </Badge>
-                          <h4 className="text-lg font-semibold text-foreground mb-4">
-                            {card.front}
-                          </h4>
-                        </div>
-                        <div className="border-t pt-4 group-hover:opacity-100 opacity-70 transition-opacity">
-                          <p className="text-muted-foreground">{card.back}</p>
+                <>
+                  <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-2xl font-bold text-foreground">
+                      Flashcards ({results.flashcards.total_cards})
+                    </h3>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm">
+                        <RotateCcw className="h-4 w-4 mr-2" />
+                        Shuffle
+                      </Button>
+                      <Button variant="outline" size="sm">
+                        <Download className="h-4 w-4 mr-2" />
+                        Export
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {results.flashcards.flashcards.slice(0, visibleFlashcards).map((card, index) => (
+                      <div 
+                        key={index} 
+                        className="perspective-[1000px] w-full h-[200px] cursor-pointer animate-in fade-in slide-in-from-bottom-5 duration-500" 
+                        style={{animationDelay: `${index * 50}ms`}}
+                        onClick={() => toggleFlip(index)}
+                      >
+                        <div className={`relative w-full h-full transition-transform duration-500 transform-style-preserve-3d ${isFlipped[index] ? 'rotate-y-180' : ''}`}>
+                          {/* Front side */}
+                          <Card className="absolute w-full h-full p-6 bg-gradient-card shadow-card border-0 backface-hidden hover:shadow-elevated transition-shadow">
+                            <div className="text-center h-full flex flex-col justify-between">
+                              <div>
+                                <div className="flex justify-between mb-4">
+                                  <Badge variant="outline" className="animate-in zoom-in-95 duration-300" style={{animationDelay: `${index * 50 + 300}ms`}}>
+                                    Card {index + 1}
+                                  </Badge>
+                                  <Badge variant="secondary" className="animate-in zoom-in-95 duration-300" style={{animationDelay: `${index * 50 + 400}ms`}}>
+                                    {card.difficulty}
+                                  </Badge>
+                                </div>
+                                <Badge variant="secondary" className="mb-4 animate-in zoom-in-95 duration-300" style={{animationDelay: `${index * 50 + 500}ms`}}>
+                                  {card.category}
+                                </Badge>
+                                <h4 className="text-lg font-semibold text-foreground animate-in fade-in-50 duration-500" style={{animationDelay: `${index * 50 + 600}ms`}}>
+                                  {card.front}
+                                </h4>
+                              </div>
+                              <p className="text-xs text-muted-foreground mt-4 animate-pulse">(Click to flip)</p>
+                            </div>
+                          </Card>
+                          
+                          {/* Back side */}
+                          <Card className="absolute w-full h-full p-6 bg-gradient-card shadow-card border-0 backface-hidden rotate-y-180">
+                            <div className="text-center h-full flex flex-col justify-between">
+                              <div>
+                                <Badge variant="outline" className="mb-4">
+                                  Answer
+                                </Badge>
+                                <p className="text-foreground text-lg">{card.back}</p>
+                              </div>
+                              <p className="text-xs text-muted-foreground mt-4 animate-pulse">(Click to flip back)</p>
+                            </div>
+                          </Card>
                         </div>
                       </div>
-                    </Card>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                  {results.flashcards.total_cards > visibleFlashcards && (
+                    <div className="flex justify-center mt-8">
+                      <Button 
+                        variant="outline" 
+                        className="animate-in fade-in-50 duration-500 hover:shadow-elevated transition-shadow"
+                        onClick={loadMoreFlashcards}
+                      >
+                        Load More Flashcards ({results.flashcards.total_cards - visibleFlashcards} remaining)
+                      </Button>
+                    </div>
+                  )}
+                </>
               ) : (
                 <Card className="p-8 bg-gradient-card shadow-card border-0">
                   <div className="text-center text-muted-foreground">
@@ -456,29 +527,33 @@ const ResultsSection: React.FC<ResultsSectionProps> = ({ results }) => {
             <TabsContent value="mindmap">
               {results.mindmap ? (
                 <Card className="p-8 bg-gradient-card shadow-card border-0">
-                  <div className="text-center">
-                    <h3 className="text-2xl font-bold mb-8 text-foreground">
-                      {results.mindmap.topic}
+                  <div className="text-center mb-6">
+                    <h3 className="text-2xl font-bold text-foreground animate-in fade-in slide-in-from-top-5">
+                      Mindmap: {results.mindmap.topic}
                     </h3>
-                    <div className="space-y-8">
-                      {results.mindmap.mindmap.children?.map((node, index) => (
-                        <div key={index} className="flex flex-col items-center">
-                          <div className="bg-primary text-primary-foreground px-6 py-3 rounded-lg font-semibold mb-4">
-                            {node.name}
-                          </div>
-                          <div className="flex gap-4 flex-wrap justify-center">
-                            {node.children?.map((child, childIndex) => (
-                              <div
-                                key={childIndex}
-                                className="bg-muted text-muted-foreground px-4 py-2 rounded-lg text-sm"
-                              >
-                                {child.name}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                    {results.mindmap.content_type && (
+                      <Badge variant="secondary" className="mt-2">
+                        {results.mindmap.content_type}
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="flex justify-center w-full h-[600px]">
+                    {results.mindmap.mindmap ? (
+                      <MindmapVisualization 
+                        data={results.mindmap.mindmap} 
+                        width={1200} 
+                        height={600}
+                        className="w-full animate-in zoom-in-95 duration-1000"
+                      />
+                    ) : (
+                      <div className="p-4 border border-red-300 bg-red-50 rounded-lg text-red-700 w-full">
+                        <h3 className="font-medium">Error displaying mindmap</h3>
+                        <p>Invalid data structure received from API. Check console for details.</p>
+                        <pre className="mt-4 p-2 bg-white rounded text-sm overflow-auto">
+                          {JSON.stringify(results.mindmap, null, 2)}
+                        </pre>
+                      </div>
+                    )}
                   </div>
                 </Card>
               ) : (

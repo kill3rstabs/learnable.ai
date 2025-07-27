@@ -46,7 +46,7 @@ const HeroSection = () => {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button variant="hero" size="lg" className="text-lg px-8">
+            <Button variant="hero" size="lg" className="text-lg px-8" onClick={() => window.location.href = '/login'}>
               Start Learning Now
               <ArrowRight className="h-5 w-5" />
             </Button>

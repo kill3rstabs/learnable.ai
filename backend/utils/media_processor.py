@@ -1,10 +1,13 @@
 """
-Media processing utilities for audio and video transcription and summarization.
+Media processing utilities for audio, video, document transcription/summarization,
+and YouTube video processing.
 """
 import os
+import re
 import tempfile
 import base64
-from typing import Tuple, Optional
+import requests
+from typing import Tuple, Optional, Dict, Any, List
 from ninja.files import UploadedFile
 from langchain_core.messages import SystemMessage, HumanMessage
 from core.gemini import GeminiService
@@ -15,6 +18,12 @@ from constants import (
 )
 import PyPDF2
 import docx
+
+try:
+    from youtube_transcript_api import YouTubeTranscriptApi, TranscriptsDisabled, NoTranscriptFound
+    YOUTUBE_API_AVAILABLE = True
+except ImportError:
+    YOUTUBE_API_AVAILABLE = False
 
 
 class MediaProcessor:
@@ -291,3 +300,136 @@ class MediaProcessor:
         finally:
             if os.path.exists(temp_file_path):
                 os.unlink(temp_file_path) 
+                
+    def process_youtube_url(self, youtube_url: str) -> Tuple[str, Optional[str]]:
+        """
+        Process YouTube URL: get transcript and summarize.
+        
+        Returns:
+            Tuple of (summary, error_message)
+        """
+        try:
+            if not YOUTUBE_API_AVAILABLE:
+                return None, "YouTube transcript API not available. Please install 'youtube_transcript_api' package."
+                
+            # Extract video_id from YouTube URL
+            video_id = self._extract_youtube_video_id(youtube_url)
+            if not video_id:
+                return None, "Invalid YouTube URL format"
+            
+            # Get transcript
+            transcript = self._get_youtube_transcript(video_id)
+            if not transcript:
+                return None, "Failed to retrieve YouTube transcript"
+            
+            # Summarize transcript
+            summary_message = self._create_summary_message(transcript)
+            summary = self.gemini_service.llm.invoke(summary_message).content
+            
+            return summary, None
+            
+        except Exception as e:
+            return None, f"Error processing YouTube video: {str(e)}"
+    
+    def extract_content_from_youtube(self, youtube_url: str) -> Tuple[str, Optional[str]]:
+        """
+        Extract transcript content from YouTube video for use in learning services.
+        
+        Returns:
+            Tuple of (transcript_text, error_message)
+        """
+        try:
+            if not YOUTUBE_API_AVAILABLE:
+                return None, "YouTube transcript API not available. Please install 'youtube_transcript_api' package."
+                
+            # Extract video_id from YouTube URL
+            video_id = self._extract_youtube_video_id(youtube_url)
+            if not video_id:
+                return None, "Invalid YouTube URL format"
+            
+            # Get transcript
+            transcript = self._get_youtube_transcript(video_id)
+            if not transcript:
+                return None, "Failed to retrieve YouTube transcript"
+            
+            return transcript, None
+            
+        except Exception as e:
+            return None, f"Error extracting YouTube transcript: {str(e)}"
+    
+    def _extract_youtube_video_id(self, youtube_url: str) -> Optional[str]:
+        """Extract YouTube video ID from URL."""
+        # Regular expression patterns for different YouTube URL formats
+        patterns = [
+            r'(?:v=|\/)([0-9A-Za-z_-]{11}).*',  # Standard youtube.com URLs
+            r'(?:embed\/)([0-9A-Za-z_-]{11})',   # Embedded URLs
+            r'(?:youtu\.be\/)([0-9A-Za-z_-]{11})',  # youtu.be URLs
+            r'^([0-9A-Za-z_-]{11})$'  # Just the ID itself
+        ]
+        
+        # Clean the URL first
+        youtube_url = youtube_url.strip()
+        
+        # Try each pattern
+        for pattern in patterns:
+            match = re.search(pattern, youtube_url)
+            if match:
+                return match.group(1)
+        
+        print(f"Failed to extract video ID from URL: {youtube_url}")
+        return None
+    
+    def _get_youtube_transcript(self, video_id: str) -> Optional[str]:
+        """Get transcript for a YouTube video."""
+        if not YOUTUBE_API_AVAILABLE:
+            print("YouTube transcript API not available")
+            return None
+            
+        try:
+            print(f"Attempting to fetch transcript for YouTube video ID: {video_id}")
+            transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
+            
+            # Try to get English transcript first
+            try:
+                print("Searching for English transcript")
+                transcript = transcript_list.find_transcript(['en'])
+                print(f"Found English transcript: {transcript}")
+            except NoTranscriptFound:
+                print("No English transcript found, trying alternatives")
+                try:
+                    # Try US or GB English
+                    transcript = transcript_list.find_transcript(['en-US', 'en-GB'])
+                    print(f"Found alternative English transcript: {transcript}")
+                except:
+                    # Get first available transcript and translate to English
+                    available_transcripts = list(transcript_list._transcripts.keys())
+                    print(f"Available transcripts: {available_transcripts}")
+                    if available_transcripts:
+                        first_lang = available_transcripts[0]
+                        print(f"Using first available language: {first_lang}")
+                        transcript = transcript_list.find_transcript([first_lang])
+                        print("Translating to English")
+                        transcript = transcript.translate('en')
+                    else:
+                        print("No transcripts available")
+                        return None
+            
+            # Get the actual transcript data
+            print("Fetching transcript data")
+            transcript_data = transcript.fetch()
+            
+            # Join all transcript segments into a single text
+            transcript_text = " ".join([item['text'] for item in transcript_data])
+            
+            print(f"Transcript length: {len(transcript_text)} characters")
+            return transcript_text
+            
+        except TranscriptsDisabled as e:
+            print(f"Transcripts are disabled for this video: {str(e)}")
+            return None
+        except NoTranscriptFound as e:
+            print(f"No transcript found for this video: {str(e)}")
+            return None
+        except Exception as e:
+            print(f"Error fetching YouTube transcript: {str(e)}")
+            return None
