@@ -32,7 +32,7 @@ import type { ProcessingResults } from "@/lib/types";
 import ResultsSection from "@/components/ResultsSection";
 
 type InputSectionProps = ReturnType<typeof useFileUpload> &
-  ReturnType<typeof useProcessing> &
+  Omit<ReturnType<typeof useProcessing>, 'summarizeTextMutation'> &
   { results: ProcessingResults | null };
 
 const InputSection: React.FC<InputSectionProps> = ({
@@ -47,7 +47,6 @@ const InputSection: React.FC<InputSectionProps> = ({
   removeFile,
   clearFiles,
   processingStatus,
-  summarizeTextMutation,
   processMultimediaMutation,
   summarizeMultimediaMutation,
   generateMindmapMutation,
@@ -83,56 +82,60 @@ const InputSection: React.FC<InputSectionProps> = ({
       
       switch (activeTab) {
         case "summary":
-          if (inputMethod === "text" && textInput.trim()) {
-            summarizeTextMutation.mutate({ text: textInput });
-          } else if (inputMethod === "file" && uploadedFiles.length > 0) {
-            summarizeMultimediaMutation.mutate(undefined);
+          if ((inputMethod === "text" && textInput.trim()) || (inputMethod === "file" && uploadedFiles.length > 0) || (inputMethod === "url" && urlInput.trim())) {
+            const textContent = inputMethod === "text" ? textInput : inputMethod === "url" ? urlInput : "";
+            summarizeMultimediaMutation.mutate(textContent);
           } else {
             toast({
               title: "Input Required",
-              description: "Please provide text or upload files to generate a summary.",
+              description: "Please provide text, upload files, or enter a URL to generate a summary.",
               variant: "destructive",
             });
           }
           break;
           
         case "mindmap":
-          if (inputMethod === "text" && textInput.trim()) {
-            generateMindmapMutation.mutate({ topic: textInput });
-          } else if (inputMethod === "file" && uploadedFiles.length > 0) {
-            generateMindmapMutation.mutate(undefined);
+          if ((inputMethod === "text" && textInput.trim()) || (inputMethod === "file" && uploadedFiles.length > 0) || (inputMethod === "url" && urlInput.trim())) {
+            const textContent = inputMethod === "text" ? textInput : inputMethod === "url" ? urlInput : "";
+            generateMindmapMutation.mutate(textContent);
           } else {
             toast({
               title: "Input Required",
-              description: "Please provide text or upload files to create a mindmap.",
+              description: "Please provide text, upload files, or enter a URL to create a mindmap.",
               variant: "destructive",
             });
           }
           break;
           
         case "quiz":
-          if (inputMethod === "text" && textInput.trim()) {
-            generateQuizMutation.mutate({ content: textInput, num_questions: 10 });
-          } else if (inputMethod === "file" && uploadedFiles.length > 0) {
-            generateQuizMutation.mutate({ content: undefined, numQuestions: 10 });
+          if ((inputMethod === "text" && textInput.trim()) || (inputMethod === "file" && uploadedFiles.length > 0) || (inputMethod === "url" && urlInput.trim())) {
+            const textContent = inputMethod === "text" ? textInput : inputMethod === "url" ? urlInput : "";
+            generateQuizMutation.mutate({ content: textContent, numQuestions: 10 });
           } else {
             toast({
               title: "Input Required",
-              description: "Please provide text or upload files to generate a quiz.",
+              description: "Please provide text, upload files, or enter a URL to generate a quiz.",
               variant: "destructive",
             });
           }
           break;
           
         case "flashcards":
-          if (inputMethod === "text" && textInput.trim()) {
-            generateFlashcardsMutation.mutate({ content: textInput });
-          } else if (inputMethod === "file" && uploadedFiles.length > 0) {
-            generateFlashcardsMutation.mutate("");
+          console.log('Flashcards case triggered');
+          console.log('inputMethod:', inputMethod);
+          console.log('textInput:', textInput);
+          console.log('uploadedFiles:', uploadedFiles);
+          console.log('urlInput:', urlInput);
+          
+          if ((inputMethod === "text" && textInput.trim()) || (inputMethod === "file" && uploadedFiles.length > 0) || (inputMethod === "url" && urlInput.trim())) {
+            const textContent = inputMethod === "text" ? textInput : inputMethod === "url" ? urlInput : "";
+            console.log('Calling generateFlashcardsMutation with:', textContent);
+            generateFlashcardsMutation.mutate(textContent);
           } else {
+            console.log('No content found for flashcards');
             toast({
               title: "Input Required",
-              description: "Please provide text or upload files to generate flashcards.",
+              description: "Please provide text, upload files, or enter a URL to generate flashcards.",
               variant: "destructive",
             });
           }
@@ -181,7 +184,7 @@ const InputSection: React.FC<InputSectionProps> = ({
   const getLoadingState = () => {
     switch (activeTab) {
       case "summary":
-        return summarizeTextMutation.isPending || summarizeMultimediaMutation.isPending;
+        return summarizeMultimediaMutation.isPending;
       case "mindmap":
         return generateMindmapMutation.isPending;
       case "quiz":

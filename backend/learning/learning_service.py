@@ -57,12 +57,11 @@ class LearningService:
             else:
                 return {"success": False, "error": "Either topic, audio file, video file, or document file must be provided"}
             
-            # Extract topic from content if not provided
-            if not topic or not topic.strip():
-                extracted_topic = self.gemini_service.run_prompt(TOPIC_EXTRACTION_PROMPT, content)
-                # Clean the extracted topic
-                extracted_topic = extracted_topic.strip().strip('"').strip("'")
-                topic = extracted_topic
+            # Extract topic from each content
+            extracted_topic = self.gemini_service.run_prompt(TOPIC_EXTRACTION_PROMPT, content)
+            # Clean the extracted topic
+            extracted_topic = extracted_topic.strip().strip('"').strip("'")
+            topic = extracted_topic
             
             # Generate mindmap
             mindmap_json = self.gemini_service.run_prompt(MINDMAP_GENERATION_PROMPT, content)

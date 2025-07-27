@@ -15,7 +15,7 @@ from utils.media_processor import MediaProcessor
 
 # Schema imports
 from schema import (
-    SummarizeTextInput, SummarizeTextOutput,
+    SummarizeTextInput, SummarizeTextOutput, SummarizeContentInput,
     MindmapInput, MindmapOutput, MindmapMultimediaInput,
     MCQQuizInput, MCQQuizOutput, MCQQuizMultimediaInput,
     FlashcardInput, FlashcardOutput, FlashcardMultimediaInput,
@@ -44,7 +44,7 @@ def hello(request):
 @router.post("/summarize-content")
 def summarize_content(
     request, 
-    data: Optional[SummarizeTextInput] = None, 
+    data: Optional[SummarizeContentInput] = None, 
     audio_file: Optional[UploadedFile] = File(None), 
     video_file: Optional[UploadedFile] = File(None),
     document_file: Optional[UploadedFile] = File(None)

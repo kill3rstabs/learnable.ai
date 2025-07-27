@@ -10,7 +10,6 @@ import { PROCESSING_STATES, ERROR_MESSAGES } from '@/lib/constants';
 import type { 
   ProcessingStatus, 
   ProcessingResults, 
-  SummarizeTextInput,
   MindmapInput,
   MCQQuizInput,
   FlashcardInput,
@@ -54,27 +53,7 @@ export const useProcessing = (uploadedFiles: UploadedFile[] = []) => {
     setResults(null);
   }, []);
 
-  // Text summarization mutation
-  const summarizeTextMutation = useMutation({
-    mutationFn: async (input: SummarizeTextInput) => {
-      validateApiKey();
-      updateStatus(PROCESSING_STATES.PROCESSING, 0, 'Generating summary...');
-      return apiClient.summarizeText(input);
-    },
-    onSuccess: (data) => {
-      console.log('summarizeTextMutation success:', data);
-      setResults(prev => ({
-        ...prev,
-        summary: data,
-        content_type: 'text',
-      }));
-      updateStatus(PROCESSING_STATES.SUCCESS, 100, 'Summary generated successfully!');
-    },
-    onError: (error: Error) => {
-      console.error('summarizeTextMutation error:', error);
-      updateStatus(PROCESSING_STATES.ERROR, 0, '', error.message);
-    },
-  });
+
 
   // Multimedia processing mutation
   const processMultimediaMutation = useMutation({
@@ -173,31 +152,29 @@ export const useProcessing = (uploadedFiles: UploadedFile[] = []) => {
       validateApiKey();
       updateStatus(PROCESSING_STATES.PROCESSING, 0, 'Generating mindmap...');
       
-      if (typeof input === 'object') {
-        // Text mindmap
-        return apiClient.generateMindmap(input);
-      } else {
-        // Multimedia mindmap
-        const audioFile = uploadedFiles.find(f => 
-          ['.mp3', '.wav', '.m4a', '.flac', '.aac', '.ogg'].includes(f.extension)
-        )?.file;
-        const videoFile = uploadedFiles.find(f => 
-          ['.mp4', '.avi', '.mov', '.mkv', '.wmv', '.flv', '.webm', '.m4v'].includes(f.extension)
-        )?.file;
-        const documentFile = uploadedFiles.find(f => 
-          ['.pdf', '.docx', '.doc'].includes(f.extension)
-        )?.file;
+      // Always use multimedia endpoint
+      const audioFile = uploadedFiles.find(f => 
+        ['.mp3', '.wav', '.m4a', '.flac', '.aac', '.ogg'].includes(f.extension)
+      )?.file;
+      const videoFile = uploadedFiles.find(f => 
+        ['.mp4', '.avi', '.mov', '.mkv', '.wmv', '.flv', '.webm', '.m4v'].includes(f.extension)
+      )?.file;
+      const documentFile = uploadedFiles.find(f => 
+        ['.pdf', '.docx', '.doc'].includes(f.extension)
+      )?.file;
 
-        return apiClient.generateMindmapMultimedia(
-          audioFile,
-          videoFile,
-          documentFile,
-          input,
-          (progress) => {
-            updateStatus(PROCESSING_STATES.PROCESSING, progress, 'Generating mindmap...');
-          }
-        );
-      }
+      // Extract topic from input
+      const topic = typeof input === 'object' ? input.topic : input;
+
+      return apiClient.generateMindmapMultimedia(
+        audioFile,
+        videoFile,
+        documentFile,
+        topic,
+        (progress) => {
+          updateStatus(PROCESSING_STATES.PROCESSING, progress, 'Generating mindmap...');
+        }
+      );
     },
     onSuccess: (data) => {
       setResults(prev => ({
@@ -217,40 +194,30 @@ export const useProcessing = (uploadedFiles: UploadedFile[] = []) => {
       validateApiKey();
       updateStatus(PROCESSING_STATES.PROCESSING, 0, 'Generating quiz questions...');
       
-      if ('content' in input && input.content && input.content.trim()) {
-        // Text quiz
-        console.log('Sending quiz request with content:', input.content.substring(0, 100) + '...');
-        console.log('Full request data:', {
-          content: input.content,
-          num_questions: 'numQuestions' in input ? input.numQuestions : 10,
-        });
-        return apiClient.generateMCQQuiz({
-          content: input.content,
-          num_questions: 'numQuestions' in input ? input.numQuestions : 10,
-        });
-      } else {
-        // Multimedia quiz
-        const audioFile = uploadedFiles.find(f => 
-          ['.mp3', '.wav', '.m4a', '.flac', '.aac', '.ogg'].includes(f.extension)
-        )?.file;
-        const videoFile = uploadedFiles.find(f => 
-          ['.mp4', '.avi', '.mov', '.mkv', '.wmv', '.flv', '.webm', '.m4v'].includes(f.extension)
-        )?.file;
-        const documentFile = uploadedFiles.find(f => 
-          ['.pdf', '.docx', '.doc'].includes(f.extension)
-        )?.file;
+      // Always use multimedia endpoint
+      const audioFile = uploadedFiles.find(f => 
+        ['.mp3', '.wav', '.m4a', '.flac', '.aac', '.ogg'].includes(f.extension)
+      )?.file;
+      const videoFile = uploadedFiles.find(f => 
+        ['.mp4', '.avi', '.mov', '.mkv', '.wmv', '.flv', '.webm', '.m4v'].includes(f.extension)
+      )?.file;
+      const documentFile = uploadedFiles.find(f => 
+        ['.pdf', '.docx', '.doc'].includes(f.extension)
+      )?.file;
 
-        return apiClient.generateMCQQuizMultimedia(
-          audioFile,
-          videoFile,
-          documentFile,
-          input.content,
-          'numQuestions' in input ? input.numQuestions : 10,
-          (progress) => {
-            updateStatus(PROCESSING_STATES.PROCESSING, progress, 'Generating quiz questions...');
-          }
-        );
-      }
+      const content = 'content' in input ? input.content : undefined;
+      const numQuestions = 'numQuestions' in input ? input.numQuestions : 10;
+
+      return apiClient.generateMCQQuizMultimedia(
+        audioFile,
+        videoFile,
+        documentFile,
+        content,
+        numQuestions,
+        (progress) => {
+          updateStatus(PROCESSING_STATES.PROCESSING, progress, 'Generating quiz questions...');
+        }
+      );
     },
     onSuccess: (data) => {
       setResults(prev => ({
@@ -267,34 +234,33 @@ export const useProcessing = (uploadedFiles: UploadedFile[] = []) => {
 
   const generateFlashcardsMutation = useMutation({
     mutationFn: async (input: FlashcardInput | string) => {
+      console.log('generateFlashcardsMutation called with input:', input);
       validateApiKey();
       updateStatus(PROCESSING_STATES.PROCESSING, 0, 'Generating flashcards...');
       
-      if (typeof input === 'string') {
-        // Multimedia flashcards
-        const audioFile = uploadedFiles.find(f => 
-          ['.mp3', '.wav', '.m4a', '.flac', '.aac', '.ogg'].includes(f.extension)
-        )?.file;
-        const videoFile = uploadedFiles.find(f => 
-          ['.mp4', '.avi', '.mov', '.mkv', '.wmv', '.flv', '.webm', '.m4v'].includes(f.extension)
-        )?.file;
-        const documentFile = uploadedFiles.find(f => 
-          ['.pdf', '.docx', '.doc'].includes(f.extension)
-        )?.file;
+      // Always use multimedia endpoint
+      const audioFile = uploadedFiles.find(f => 
+        ['.mp3', '.wav', '.m4a', '.flac', '.aac', '.ogg'].includes(f.extension)
+      )?.file;
+      const videoFile = uploadedFiles.find(f => 
+        ['.mp4', '.avi', '.mov', '.mkv', '.wmv', '.flv', '.webm', '.m4v'].includes(f.extension)
+      )?.file;
+      const documentFile = uploadedFiles.find(f => 
+        ['.pdf', '.docx', '.doc'].includes(f.extension)
+      )?.file;
 
-        return apiClient.generateFlashcardsMultimedia(
-          audioFile,
-          videoFile,
-          documentFile,
-          input,
-          (progress) => {
-            updateStatus(PROCESSING_STATES.PROCESSING, progress, 'Generating flashcards...');
-          }
-        );
-      } else {
-        // Text flashcards
-        return apiClient.generateFlashcards(input);
-      }
+      // Extract content from input
+      const content = typeof input === 'string' ? input : (input && 'content' in input ? input.content : undefined);
+
+      return apiClient.generateFlashcardsMultimedia(
+        audioFile,
+        videoFile,
+        documentFile,
+        content,
+        (progress) => {
+          updateStatus(PROCESSING_STATES.PROCESSING, progress, 'Generating flashcards...');
+        }
+      );
     },
     onSuccess: (data) => {
       setResults(prev => ({
@@ -320,7 +286,6 @@ export const useProcessing = (uploadedFiles: UploadedFile[] = []) => {
     updateStatus,
     resetProcessing,
     cancelProcessing,
-    summarizeTextMutation,
     processMultimediaMutation,
     summarizeMultimediaMutation,
     generateMindmapMutation,
