@@ -195,20 +195,20 @@ const InputSection: React.FC<InputSectionProps> = ({
         return false;
     }
   };
-      const handleClearAll = () => {
-        clearFiles();                // Clear uploaded files
-        setTextInput("");            // Clear text input
-        setUrlInput("");             // Clear URL input
-        setActiveTab("summary");     // Optional: Reset to summary tab
-        // Optionally clear processing status if needed
-        // Reset results
-        if (results) {
-          results.summary = undefined;
-          results.mindmap = undefined;
-          results.quiz = undefined;
-          results.flashcards = undefined;
-        }
-      };
+
+  const handleClearAll = () => {
+    clearFiles();
+    setTextInput("");
+    setUrlInput("");
+    if (results) {
+      results.summary = undefined;
+      results.mindmap = undefined;
+      results.quiz = undefined;
+      results.flashcards = undefined;
+    }
+    // Optionally reset active tab or other states
+  };
+
   return (
     <section className="py-16 bg-muted/30">
       <div className="container mx-auto px-4">
@@ -219,6 +219,13 @@ const InputSection: React.FC<InputSectionProps> = ({
           </p>
         </div>
 
+        <div className="relative max-w-7xl mx-auto">
+        <div className="absolute top-0 left-0">
+            <Button variant="outline" onClick={handleClearAll} size="sm">
+              <Trash2 className="h-4 w-4 mr-2" />
+              Clear All
+            </Button>
+          </div>
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Left Side - File Upload & Input */}
           <Card className="p-6 bg-card shadow-elevated border-0">
@@ -344,10 +351,6 @@ const InputSection: React.FC<InputSectionProps> = ({
     <Button variant="secondary" onClick={handleGenerateContent}>
       <FileText className="h-4 w-4 mr-2" />
       Regenerate
-    </Button>
-    <Button variant="outline" onClick={handleClearAll}>
-      <Trash2 className="h-4 w-4 mr-2" />
-      Clear All
     </Button>
   </div>
 </div>
