@@ -40,6 +40,7 @@ interface FlashcardState {
 // Mindmap state interface for zoom functionality
 interface MindmapState {
   zoomLevel: number;
+  layout: 'vertical' | 'horizontal';
 }
 
 // Markdown renderer component
@@ -107,6 +108,7 @@ const ResultsSection: React.FC<ResultsSectionProps> = ({ results, activeTab, onR
   // New state for mindmap zoom
   const [mindmapState, setMindmapState] = useState<MindmapState>({
     zoomLevel: 1,
+    layout: 'vertical',
   });
 
   // Reference to mindmap container for scrolling
@@ -181,9 +183,37 @@ const ResultsSection: React.FC<ResultsSectionProps> = ({ results, activeTab, onR
 
   // Reset zoom function
   const handleResetZoom = () => {
-    setMindmapState({
+    setMindmapState(prev => ({
+      ...prev,
       zoomLevel: 1,
-    });
+    }));
+  };
+
+  const handleLayoutChange = (layout: 'vertical' | 'horizontal') => {
+    setMindmapState(prev => ({
+      ...prev,
+      layout: layout,
+    }));
+  };
+
+  const handleDownload = () => {
+    try {
+      const svg = document.querySelector('.mermaid-diagram svg');
+      if (svg) {
+        const svgData = new XMLSerializer().serializeToString(svg);
+        const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+        const svgUrl = URL.createObjectURL(svgBlob);
+        const downloadLink = document.createElement('a');
+        downloadLink.href = svgUrl;
+        downloadLink.download = `${results?.mindmap?.topic || 'mindmap'}-mindmap.svg`;
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        document.body.removeChild(downloadLink);
+        URL.revokeObjectURL(svgUrl);
+      }
+    } catch (error) {
+      console.error('Error downloading SVG:', error);
+    }
   };
 
   const handleAnswerSelect = (answer: string) => {
@@ -1111,8 +1141,27 @@ const ResultsSection: React.FC<ResultsSectionProps> = ({ results, activeTab, onR
               Regenerate
             </Button>
           )}
+          <Button
+            variant={mindmapState.layout === 'vertical' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => handleLayoutChange('vertical')}
+          >
+            Vertical Layout
+          </Button>
+          <Button
+            variant={mindmapState.layout === 'horizontal' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => handleLayoutChange('horizontal')}
+          >
+            Horizontal Layout
+          </Button>
         </div>
-        <div className="flex items-center border rounded-md overflow-hidden">
+        <div className="flex items-center">
+        <Button variant="outline" size="sm" onClick={handleDownload}>
+          <Download className="h-4 w-4 mr-2" />
+          Download SVG
+        </Button>
+        <div className="flex items-center border rounded-md overflow-hidden ml-4">
           <Button 
             variant="ghost" 
             size="sm" 
@@ -1143,6 +1192,7 @@ const ResultsSection: React.FC<ResultsSectionProps> = ({ results, activeTab, onR
             <ZoomIn className="h-4 w-4" />
           </Button>
         </div>
+        </div>
       </div>
 
       {/* Container with fixed height and scroll - contains the zoomable mindmap */}
@@ -1159,7 +1209,8 @@ const ResultsSection: React.FC<ResultsSectionProps> = ({ results, activeTab, onR
         {/* MindmapViewer component with zoomLevel prop */}
         <MindmapViewer 
           mindmap={results.mindmap} 
-          zoomLevel={mindmapState.zoomLevel} 
+          zoomLevel={mindmapState.zoomLevel}
+          layout={mindmapState.layout}
         />
       </div>
     </div>

@@ -11,11 +11,10 @@ interface MindmapViewerProps {
   mindmap: MindmapOutput;
   className?: string;
   zoomLevel?: number;
+  layout?: 'vertical' | 'horizontal';
 }
 
-const MindmapViewer: React.FC<MindmapViewerProps> = ({ mindmap, className = "", zoomLevel = 1 }) => {
-  const [layout, setLayout] = useState<'vertical' | 'horizontal'>('vertical');
-
+const MindmapViewer: React.FC<MindmapViewerProps> = ({ mindmap, className = "", zoomLevel = 1, layout = 'vertical' }) => {
   const mermaidChart = useMemo(() => {
     try {
       if (!mindmap?.topic || !mindmap?.mindmap) {
@@ -69,30 +68,6 @@ const MindmapViewer: React.FC<MindmapViewerProps> = ({ mindmap, className = "", 
 
   return (
     <div className={`${className}`}>
-      {/* Layout controls - NOT affected by zoom */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex gap-2">
-          <Button
-            variant={layout === 'horizontal' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setLayout('horizontal')}
-          >
-            Vertical Layout
-          </Button>
-          <Button
-            variant={layout === 'vertical' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setLayout('vertical')}
-          >
-            Horizontal Layout
-          </Button>
-        </div>
-        <Button variant="outline" size="sm" onClick={handleDownload}>
-          <Download className="h-4 w-4 mr-2" />
-          Download SVG
-        </Button>
-      </div>
-
       {/* Zoomable diagram content ONLY - separate from controls */}
       <div className="mindmap-diagram-wrapper">
         <div
