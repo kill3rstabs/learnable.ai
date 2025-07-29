@@ -195,7 +195,20 @@ const InputSection: React.FC<InputSectionProps> = ({
         return false;
     }
   };
-
+      const handleClearAll = () => {
+        clearFiles();                // Clear uploaded files
+        setTextInput("");            // Clear text input
+        setUrlInput("");             // Clear URL input
+        setActiveTab("summary");     // Optional: Reset to summary tab
+        // Optionally clear processing status if needed
+        // Reset results
+        if (results) {
+          results.summary = undefined;
+          results.mindmap = undefined;
+          results.quiz = undefined;
+          results.flashcards = undefined;
+        }
+      };
   return (
     <section className="py-16 bg-muted/30">
       <div className="container mx-auto px-4">
@@ -256,7 +269,7 @@ const InputSection: React.FC<InputSectionProps> = ({
                     fileInputRef={fileInputRef}
                     onFileInputChange={handleFileInputChange}
                     acceptedTypes={SUPPORTED_FILE_TYPES.ALL}
-                    multiple={true}
+                    multiple={false}
                     disabled={isProcessing}
                   />
                 </TabsContent>
@@ -318,12 +331,29 @@ const InputSection: React.FC<InputSectionProps> = ({
 
                 <TabsContent value="summary" className="space-y-4">
                   {hasResultsForTab() ? (
-                    <ResultsSection 
-                      results={results} 
-                      activeTab="summary" 
-                      onRegenerate={handleGenerateContent}
-                      isRegenerating={getLoadingState()}
-                    />
+                          <>
+                   <div className="space-y-4">
+  <ResultsSection 
+    results={results} 
+    activeTab="summary" 
+    onRegenerate={handleGenerateContent}
+    isRegenerating={getLoadingState()}
+  />
+
+  <div className="flex justify-end gap-2">
+    <Button variant="secondary" onClick={handleGenerateContent}>
+      <FileText className="h-4 w-4 mr-2" />
+      Regenerate
+    </Button>
+    <Button variant="outline" onClick={handleClearAll}>
+      <Trash2 className="h-4 w-4 mr-2" />
+      Clear All
+    </Button>
+  </div>
+</div>
+
+                  </>
+
                   ) : (
                     <div className="text-center p-8">
                       <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />

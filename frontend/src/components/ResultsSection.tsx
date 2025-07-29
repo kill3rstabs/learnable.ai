@@ -2,11 +2,11 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { FileText, HelpCircle, BookOpen, Brain, Download, Share2, Copy, Loader2, CheckCircle, XCircle, RotateCcw } from "lucide-react";
+import { FileText, HelpCircle, BookOpen, Brain, Download, Share2, Copy, Loader2, CheckCircle, XCircle, RotateCcw, ZoomIn, ZoomOut } from "lucide-react";
 import { useProcessing } from "@/hooks/useProcessing";
 import { useToast } from "@/hooks/use-toast";
 import type { ProcessingResults } from "@/lib/types";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import MermaidDiagram from "@/components/MermaidDiagram";
 import { convertMindmapToMermaid } from "@/utils/mindmapToMermaid";
 import MindmapViewer from "@/components/MindmapViewer";
@@ -35,6 +35,11 @@ interface QuizResultState {
 // Flashcard state interface
 interface FlashcardState {
   currentCard: number;
+}
+
+// Mindmap state interface for zoom functionality
+interface MindmapState {
+  zoomLevel: number;
 }
 
 // Markdown renderer component
@@ -99,6 +104,14 @@ const ResultsSection: React.FC<ResultsSectionProps> = ({ results, activeTab, onR
     currentCard: 0,
   });
 
+  // New state for mindmap zoom
+  const [mindmapState, setMindmapState] = useState<MindmapState>({
+    zoomLevel: 1,
+  });
+
+  // Reference to mindmap container for scrolling
+  const mindmapContainerRef = useRef<HTMLDivElement>(null);
+
   // Helper function to get correct answer text from letter
   const getCorrectAnswerText = (question: MCQQuestion) => {
     const letterIndex = question.correct_answer.charCodeAt(0) - 65; // Convert A=0, B=1, C=2, D=3
@@ -140,6 +153,38 @@ const ResultsSection: React.FC<ResultsSectionProps> = ({ results, activeTab, onR
       });
     }
   }, [results?.flashcards]);
+
+  // Reset mindmap zoom when results change
+  useEffect(() => {
+    if (results?.mindmap) {
+      setMindmapState({
+        zoomLevel: 1,
+      });
+    }
+  }, [results?.mindmap]);
+
+  // Zoom in function
+  const handleZoomIn = () => {
+    setMindmapState(prev => ({
+      ...prev,
+      zoomLevel: Math.min(prev.zoomLevel + 0.1, 2.0), // Limit max zoom to 2x
+    }));
+  };
+
+  // Zoom out function
+  const handleZoomOut = () => {
+    setMindmapState(prev => ({
+      ...prev,
+      zoomLevel: Math.max(prev.zoomLevel - 0.1, 0.5), // Limit min zoom to 0.5x
+    }));
+  };
+
+  // Reset zoom function
+  const handleResetZoom = () => {
+    setMindmapState({
+      zoomLevel: 1,
+    });
+  };
 
   const handleAnswerSelect = (answer: string) => {
     if (results?.quiz?.quiz) {
@@ -318,25 +363,79 @@ const ResultsSection: React.FC<ResultsSectionProps> = ({ results, activeTab, onR
           return results?.mindmap ? (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-foreground">Mindmap</h3>
-                {onRegenerate && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={onRegenerate}
-                    disabled={isRegenerating}
-                    className="flex items-center gap-2"
-                  >
-                    {isRegenerating ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <RotateCcw className="h-4 w-4" />
-                    )}
-                    Regenerate
-                  </Button>
-                )}
+                <h3 className="text-xl font-semibold text-foreground">Mindmap</h3>
+                <div className="flex items-center space-x-2">
+                  {onRegenerate && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={onRegenerate}
+                      disabled={isRegenerating}
+                      className="flex items-center gap-2 mr-4"
+                    >
+                      {isRegenerating ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <RotateCcw className="h-4 w-4" />
+                      )}
+                      Regenerate
+                    </Button>
+                  )}
+                  <div className="flex items-center border rounded-md overflow-hidden">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={handleZoomOut}
+                      title="Zoom Out"
+                      disabled={mindmapState.zoomLevel <= 0.5}
+                      className="h-8 px-2 rounded-none"
+                    >
+                      <ZoomOut className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={handleResetZoom}
+                      title="Reset Zoom"
+                      className="h-8 px-2 rounded-none border-l border-r border-border/30"
+                    >
+                      <span className="text-xs font-mono">{Math.round(mindmapState.zoomLevel * 100)}%</span>
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={handleZoomIn}
+                      title="Zoom In"
+                      disabled={mindmapState.zoomLevel >= 2.0}
+                      className="h-8 px-2 rounded-none"
+                    >
+                      <ZoomIn className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
               </div>
-              <MindmapViewer mindmap={results.mindmap} />
+              <div 
+                ref={mindmapContainerRef}
+                className="mindmap-container border border-border/50 rounded-lg"
+                style={{
+                  height: '500px',
+                  overflow: 'auto',
+                  position: 'relative',
+                }}
+              >
+                <div 
+                  style={{
+                    transform: `scale(${mindmapState.zoomLevel})`,
+                    transformOrigin: 'center center',
+                    transition: 'transform 0.2s ease',
+                    width: '100%',
+                    height: '100%',
+                    padding: '20px',
+                  }}
+                >
+                  <MindmapViewer mindmap={results.mindmap} />
+                </div>
+              </div>
             </div>
           ) : (
             <Card className="p-8 bg-gradient-card shadow-card border-0">
@@ -981,18 +1080,98 @@ const ResultsSection: React.FC<ResultsSectionProps> = ({ results, activeTab, onR
               )}
             </TabsContent>
 
-            <TabsContent value="mindmap">
-              {results.mindmap ? (
-                <MindmapViewer mindmap={results.mindmap} />
+            
+<TabsContent value="mindmap">
+  {results.mindmap ? (
+    <div className="space-y-4">
+      {/* Header with title - NOT affected by zoom */}
+      <div className="flex flex-col space-y-2">
+        <h3 className="text-xl font-bold text-foreground">Mindmap</h3>
+        <p className="text-muted-foreground">
+          Visual representation of key concepts and their relationships
+        </p>
+      </div>
+
+      {/* Zoom controls - NOT affected by zoom */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center">
+          {onRegenerate && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onRegenerate}
+              disabled={isRegenerating}
+              className="flex items-center gap-2 mr-4"
+            >
+              {isRegenerating ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <Card className="p-8 bg-gradient-card shadow-card border-0">
-                  <div className="text-center text-muted-foreground">
-                    <Brain className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>No mindmap available. Process some content to generate a mindmap.</p>
-                  </div>
-                </Card>
+                <RotateCcw className="h-4 w-4" />
               )}
-            </TabsContent>
+              Regenerate
+            </Button>
+          )}
+        </div>
+        <div className="flex items-center border rounded-md overflow-hidden">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={handleZoomOut}
+            title="Zoom Out"
+            disabled={mindmapState.zoomLevel <= 0.5}
+            className="h-8 px-2 rounded-none"
+          >
+            <ZoomOut className="h-4 w-4" />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={handleResetZoom}
+            title="Reset Zoom"
+            className="h-8 px-2 rounded-none border-l border-r border-border/30"
+          >
+            <span className="text-xs font-mono">{Math.round(mindmapState.zoomLevel * 100)}%</span>
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={handleZoomIn}
+            title="Zoom In"
+            disabled={mindmapState.zoomLevel >= 2.0}
+            className="h-8 px-2 rounded-none"
+          >
+            <ZoomIn className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+
+      {/* Container with fixed height and scroll - contains the zoomable mindmap */}
+      <div 
+        ref={mindmapContainerRef}
+        className="mindmap-container border border-border/50 rounded-lg bg-background/50"
+        style={{
+          height: '500px',
+          overflow: 'auto',
+          position: 'relative',
+        }}
+        
+      >
+        {/* MindmapViewer component with zoomLevel prop */}
+        <MindmapViewer 
+          mindmap={results.mindmap} 
+          zoomLevel={mindmapState.zoomLevel} 
+        />
+      </div>
+    </div>
+  ) : (
+    <Card className="p-8 bg-gradient-card shadow-card border-0">
+      <div className="text-center text-muted-foreground">
+        <Brain className="h-12 w-12 mx-auto mb-4 opacity-50" />
+        <p>No mindmap available. Process some content to generate a mindmap.</p>
+      </div>
+    </Card>
+  )}
+</TabsContent>
 
           </Tabs>
 
@@ -1010,6 +1189,7 @@ const ResultsSection: React.FC<ResultsSectionProps> = ({ results, activeTab, onR
       </div>
     </section>
   );
+  
 };
 
 export default ResultsSection;

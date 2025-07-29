@@ -49,25 +49,22 @@ export const useFileUpload = () => {
 
   // Handle file selection
   const handleFileSelect = useCallback((files: FileList | File[]) => {
-    const fileArray = Array.from(files);
-    const newFiles: UploadedFile[] = [];
+  const fileArray = Array.from(files);
 
-    fileArray.forEach((file) => {
-      const validation = validateFile(file);
-      
-      if (validation.isValid) {
-        const uploadedFile = createUploadedFile(file);
-        newFiles.push(uploadedFile);
-      } else {
-        console.error(`File validation failed for ${file.name}:`, validation.error);
-        // You might want to show a toast notification here
-      }
-    });
+  if (fileArray.length === 0) return;
 
-    if (newFiles.length > 0) {
-      setUploadedFiles(prev => [...prev, ...newFiles]);
-    }
-  }, [validateFile, createUploadedFile]);
+  const firstFile = fileArray[0];
+  const validation = validateFile(firstFile);
+
+  if (validation.isValid) {
+    const uploadedFile = createUploadedFile(firstFile);
+    setUploadedFiles([uploadedFile]); // ✅ Replace instead of appending
+  } else {
+    console.error(`File validation failed for ${firstFile.name}:`, validation.error);
+    // Optionally show a toast here
+  }
+}, [validateFile, createUploadedFile]);
+
 
   // Handle drag and drop
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -127,14 +124,15 @@ export const useFileUpload = () => {
   }, []);
 
   // Handle file input change
-  const handleFileInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files && files.length > 0) {
-      handleFileSelect(files);
-    }
-    // Reset input value to allow selecting the same file again
-    e.target.value = '';
-  }, [handleFileSelect]);
+const handleFileInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  const files = e.target.files;
+  if (files && files.length > 0) {
+    const firstFile = files[0];
+    handleFileSelect([firstFile]); // Pass only the first file as an array
+  }
+  // Reset input value to allow selecting the same file again
+  e.target.value = '';
+}, [handleFileSelect]);
 
   // Get files by type
   const getFilesByType = useCallback((type: 'audio' | 'video' | 'document') => {
