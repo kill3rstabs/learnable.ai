@@ -51,7 +51,9 @@ def summarize_content(
     document_file: Optional[UploadedFile] = File(None)
 ):
     """
-    Summarize content using Gemini API - accepts text, YouTube URLs, audio, video, and document files
+    Summarizes input content, supporting plain text, YouTube URLs, audio, video, and document files.
+    
+    Accepts either direct text input (including YouTube URLs) or uploaded media files. For YouTube URLs, retrieves and summarizes the transcript. For other media types, processes the file to generate a summary. Returns the summary, original content reference, word counts, and content type. If input is missing or processing fails, returns an error message.
     """
     try:
         content_type = None
