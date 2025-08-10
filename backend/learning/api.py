@@ -12,6 +12,7 @@ from core.gemini import GeminiService
 # Service imports
 from .learning_service import LearningService
 from utils.media_processor import MediaProcessor
+from utils.youtube import is_youtube_url, get_youtube_transcript
 
 # Schema imports
 from schema import (
@@ -50,50 +51,60 @@ def summarize_content(
     document_file: Optional[UploadedFile] = File(None)
 ):
     """
-    Summarize content using Gemini API - accepts text, audio, video, and document files
+    Summarize content using Gemini API - accepts text, YouTube URLs, audio, video, and document files
     """
     try:
         content_type = None
-        content_text = ""
         summary = None
         original_text = ""
         word_count_original = 0
         
-        # Handle text input
+        # Handle text or YouTube URL input
         if data and data.text:
-            content_type = "text"
-            content_text = data.text
-            original_text = data.text
-            word_count_original = len(data.text.split())
-            summary, error = media_processor.summarize_text(data.text)
-            if error:
-                return {"error": error}
+            if is_youtube_url(data.text):
+                content_type = "youtube"
+                original_text = data.text
+                transcript, error = get_youtube_transcript(data.text)
+                if error:
+                    return {"error": error}
+                summary, error = media_processor.summarize_text(transcript)
+                if error:
+                    return {"error": error}
+                word_count_original = len(transcript.split())
+            else:
+                content_type = "text"
+                original_text = data.text
+                summary, error = media_processor.summarize_text(data.text)
+                if error:
+                    return {"error": error}
+                word_count_original = len(data.text.split())
+
         # Handle audio input
         elif audio_file:
             content_type = "audio"
-            print(f"Processing audio file: {audio_file.name}, size: {audio_file.size}")
             original_text = f"Audio file: {audio_file.name}"
             summary, error = media_processor.process_audio_file(audio_file)
             if error:
                 return {"error": error}
+            # Word count for audio is handled inside process_audio_file or can be omitted
+
         # Handle video input
         elif video_file:
             content_type = "video"
-            print(f"Processing video file: {video_file.name}, size: {video_file.size}")
             original_text = f"Video file: {video_file.name}"
             summary, error = media_processor.process_video_file(video_file)
             if error:
                 return {"error": error}
+
         # Handle document input
         elif document_file:
             content_type = "document"
-            print(f"Processing document file: {document_file.name}, size: {document_file.size}")
             original_text = f"Document file: {document_file.name}"
             summary, error = media_processor.process_document_file(document_file)
             if error:
                 return {"error": error}
         else:
-            return {"error": "Either text content, audio file, video file, or document file must be provided"}
+            return {"error": "No content provided. Please enter text, a YouTube URL, or upload a file."}
         
         if summary:
             word_count_summary = len(summary.split())
