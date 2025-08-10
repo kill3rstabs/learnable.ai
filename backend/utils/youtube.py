@@ -20,23 +20,22 @@ def is_youtube_url(url: str) -> bool:
 def get_youtube_transcript(url: str) -> tuple[str | None, str | None]:
     """
     Fetches the transcript for a given YouTube URL.
-
     Args:
         url: The URL of the YouTube video.
-
     Returns:
         A tuple containing the transcript text and an error message.
         If successful, the error message will be None.
         If an error occurs, the transcript will be None.
     """
-    video_id_match = re.search(r'(?<=v=)[^&#]+', url) or \
-                     re.search(r'(?<=be/)[^&#]+', url) or \
-                     re.search(r'(?<=embed/)[^&#]+', url)
+    # Regex to extract the video ID from various YouTube URL formats
+    regex = r"(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})"
+
+    video_id_match = re.search(regex, url)
 
     if not video_id_match:
         return None, "Invalid YouTube URL: Could not extract video ID."
 
-    video_id = video_id_match.group(0)
+    video_id = video_id_match.group(1)
 
     try:
         # To-do: Add language support in the future
@@ -44,8 +43,9 @@ def get_youtube_transcript(url: str) -> tuple[str | None, str | None]:
         transcript = " ".join([item['text'] for item in transcript_list])
         return transcript, None
     except NoTranscriptFound:
-        return None, f"Could not retrieve a transcript for the video with ID: {video_id}. Transcripts may be disabled for this video or it might not have a transcript in the default language."
+        return None, f"Could not retrieve a transcript for the video with ID: {video_id}. Transcripts may be disabled or the video may not have a transcript."
     except TranscriptsDisabled:
         return None, f"Transcripts are disabled for the video with ID: {video_id}."
     except Exception as e:
+        # This will catch other errors, like the parsing error from the bug report
         return None, f"An unexpected error occurred while fetching the transcript for video ID {video_id}: {str(e)}"
