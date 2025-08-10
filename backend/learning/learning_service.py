@@ -19,6 +19,9 @@ class LearningService:
     """Handles learning content generation operations."""
 
     def __init__(self, gemini_service: GeminiService):
+        """
+        Initialize the LearningService with a GeminiService instance for content generation.
+        """
         self.gemini_service = gemini_service
 
     def _get_content_from_source(
@@ -30,8 +33,10 @@ class LearningService:
         media_processor=None
     ) -> tuple[str | None, str | None, str | None]:
         """
-        Determines the source of content and extracts text.
-        Handles text, YouTube URLs, and file uploads.
+        Extracts textual content and identifies its source from provided input, which may include text, a YouTube URL, or uploaded media files.
+        
+        Returns:
+            A tuple containing the extracted content (or None), a string indicating the content type ("youtube", "audio", "video", "document", or "text"), and an error message if extraction fails.
         """
         # Check for YouTube URL first
         if text_input and is_youtube_url(text_input):
@@ -64,7 +69,9 @@ class LearningService:
         media_processor=None
     ) -> Dict[str, Any]:
         """
-        Generate mindmap from multimedia content, including YouTube URLs.
+        Generates a mindmap from multimedia input, including text, YouTube URLs, audio, video, or document files.
+        
+        Extracts content from the provided sources, determines the topic, and generates a mindmap structure using a language model. Returns a dictionary containing the mindmap, content type, original content, and extracted topic. If content extraction or mindmap generation fails, returns an error message.
         """
         try:
             content, content_type, error = self._get_content_from_source(
@@ -106,7 +113,16 @@ class LearningService:
         media_processor=None
     ) -> Dict[str, Any]:
         """
-        Generate MCQ quiz from multimedia content, including YouTube URLs.
+        Generate a multiple-choice quiz from provided content or multimedia sources.
+        
+        Extracts textual content from a text input, YouTube URL, or uploaded audio, video, or document file, then generates a set of MCQ questions using a language model. Returns the quiz questions, content type, and original content, or an error message if generation fails.
+        
+        Parameters:
+            content (str, optional): Text input or YouTube URL to extract content from.
+            num_questions (int): Number of MCQ questions to generate.
+        
+        Returns:
+            dict: A dictionary containing the success status, generated quiz questions, content type, original content, or an error message.
         """
         try:
             content_text, content_type, error = self._get_content_from_source(
@@ -143,7 +159,12 @@ class LearningService:
         media_processor=None
     ) -> Dict[str, Any]:
         """
-        Generate flashcards from multimedia content, including YouTube URLs.
+        Generate flashcards from provided text, YouTube URL, or uploaded audio, video, or document files.
+        
+        Extracts content from the specified input source, generates flashcards using a language model prompt, and returns the flashcards data along with metadata. Handles content extraction errors and JSON parsing failures.
+        
+        Returns:
+            dict: A dictionary containing the success status, flashcards data, total number of cards, content type, and original content, or an error message if generation fails.
         """
         try:
             content_text, content_type, error = self._get_content_from_source(
@@ -173,7 +194,15 @@ class LearningService:
             return {"success": False, "error": f"Error generating flashcards: {str(e)}"}
 
     def _clean_json_response(self, response: str) -> str:
-        """Helper to clean up JSON responses from the LLM."""
+        """
+        Clean and normalize JSON responses from the language model by removing code block markers and extraneous whitespace.
+        
+        Parameters:
+            response (str): The raw JSON response string from the language model.
+        
+        Returns:
+            str: The cleaned JSON string, ready for parsing.
+        """
         response = response.strip()
         if response.startswith("```json"):
             response = response[7:]
@@ -185,10 +214,12 @@ class LearningService:
     
     def generate_mindmap(self, topic: str) -> Dict[str, Any]:
         """
-        Generate mindmap JSON structure for a given topic.
+        Generate a mindmap structure for the specified topic.
+        
+        Runs a prompt to produce a mindmap in JSON format, cleans and parses the response, and returns the result as a MindmapNode object.
         
         Returns:
-            Dict with success status and mindmap data or error message
+            dict: Contains a success flag and the generated mindmap data, or an error message if generation or parsing fails.
         """
         try:
             mindmap_json = self.gemini_service.run_prompt(MINDMAP_GENERATION_PROMPT, topic)

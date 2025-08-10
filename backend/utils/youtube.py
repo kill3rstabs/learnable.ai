@@ -6,7 +6,10 @@ from youtube_transcript_api import YouTubeTranscriptApi, NoTranscriptFound, Tran
 
 def is_youtube_url(url: str) -> bool:
     """
-    Checks if the given URL is a valid YouTube URL.
+    Determine whether the input string is a valid YouTube video URL.
+    
+    Returns:
+        bool: True if the input matches common YouTube URL formats; otherwise, False.
     """
     if not isinstance(url, str):
         return False
@@ -19,15 +22,15 @@ def is_youtube_url(url: str) -> bool:
 
 def get_youtube_transcript(url: str) -> tuple[str | None, str | None]:
     """
-    Fetches the transcript for a given YouTube URL.
-
-    Args:
-        url: The URL of the YouTube video.
-
+    Retrieve the transcript text for a YouTube video given its URL.
+    
+    Attempts to extract the video ID from the provided URL and fetches the transcript using the YouTubeTranscriptApi. Returns a tuple containing the transcript text and an error message; one of the two will be None depending on success or failure.
+    
+    Parameters:
+        url (str): The URL of the YouTube video.
+    
     Returns:
-        A tuple containing the transcript text and an error message.
-        If successful, the error message will be None.
-        If an error occurs, the transcript will be None.
+        tuple[str | None, str | None]: A tuple where the first element is the transcript text if retrieval is successful (otherwise None), and the second element is an error message if retrieval fails (otherwise None).
     """
     video_id_match = re.search(r'(?<=v=)[^&#]+', url) or \
                      re.search(r'(?<=be/)[^&#]+', url) or \
