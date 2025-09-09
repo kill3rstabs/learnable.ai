@@ -27,15 +27,15 @@ const HeroSection = () => {
   ];
 
   return (
-    <section className="py-20 bg-gradient-to-br from-background via-muted/30 to-secondary/10">
+    <section className="py-28 bg-green-50">
       <div className="container mx-auto px-4">
-        <div className=" mb-16 justify-items-start justify-start mx-16">
-          <div className=" items-center gap-2 bg-muted/50 rounded-full py-2 mb-6">
+        <div className=" mb-16 justify-items-start justify-start mx-16 py-6">
+          <div className="inline-flex bg-green-100 px-3 gap-2 bg-muted/50 rounded-full py-2 mb-6">
             <Zap className="h-4 w-4 text-accent" />
             <span className="text-sm font-medium text-muted-foreground">Powered by Google Gemini AI</span>
           </div>
           
-          <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-hero bg-clip-text text-transparent">
+          <h1 className="text-5xl md:text-6xl font-bold mb-6 text-green-600 ">
             Transform Any Content Into
             <br />
             <span className="text-foreground">Learning Resources</span>
@@ -46,11 +46,11 @@ const HeroSection = () => {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button variant="hero" size="lg" className="text-lg px-8">
+            <Button  size="lg" className="text-lg font-semibold text-white px-8 bg-green-500 rounded-3xl">
               Start Learning Now
               <ArrowRight className="h-5 w-5" />
             </Button>
-            <Button variant="outline" size="lg" className="text-lg px-8">
+            <Button  size="lg" className="text-lg font-semibold hover:bg-green-500 hover:text-white text-green-600 border-green-500 rounded-3xl border-2 px-8">
               <Video className="h-5 w-5" />
               Watch Demo
             </Button>
