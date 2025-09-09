@@ -29,8 +29,8 @@ const HeroSection = () => {
   return (
     <section className="py-20 bg-gradient-to-br from-background via-muted/30 to-secondary/10">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-16">
-          <div className="inline-flex items-center gap-2 bg-muted/50 rounded-full px-4 py-2 mb-6">
+        <div className=" mb-16 justify-items-start justify-start mx-16">
+          <div className=" items-center gap-2 bg-muted/50 rounded-full py-2 mb-6">
             <Zap className="h-4 w-4 text-accent" />
             <span className="text-sm font-medium text-muted-foreground">Powered by Google Gemini AI</span>
           </div>
@@ -41,7 +41,7 @@ const HeroSection = () => {
             <span className="text-foreground">Learning Resources</span>
           </h1>
           
-          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+          <p className="text-xl text-muted-foreground mb-8 max-w-2xl">
             Upload videos, audio, or text and instantly generate summaries, quizzes, flashcards, and mind maps using advanced AI technology.
           </p>
           
