@@ -4,6 +4,7 @@
 import re
 from youtube_transcript_api import YouTubeTranscriptApi, NoTranscriptFound, TranscriptsDisabled
 
+
 def is_youtube_url(url: str) -> bool:
     """
     Checks if the given URL is a valid YouTube URL.
@@ -16,6 +17,7 @@ def is_youtube_url(url: str) -> bool:
         r'(youtube|youtu|youtube-nocookie)\.(com|be)/'
         r'(watch\?v=|embed/|v/|.+\?v=)?([^&=%\?]{11})')
     return re.match(youtube_regex, url) is not None
+
 
 def get_youtube_transcript(url: str) -> tuple[str | None, str | None]:
     """
@@ -38,14 +40,70 @@ def get_youtube_transcript(url: str) -> tuple[str | None, str | None]:
     video_id = video_id_match.group(1)
 
     try:
-        # To-do: Add language support in the future
-        transcript_list = YouTubeTranscriptApi.get_transcript(video_id)
-        transcript = " ".join([item['text'] for item in transcript_list])
-        return transcript, None
+        # Prefer robust flow over direct get_transcript
+        transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
+
+        preferred_langs = ['en', 'en-US', 'en-GB']
+        selected_transcript = None
+
+        # 1) Try human-created English captions
+        try:
+            selected_transcript = transcript_list.find_transcript(preferred_langs)
+        except Exception:
+            selected_transcript = None
+
+        # 2) Try auto-generated English captions
+        if selected_transcript is None:
+            try:
+                selected_transcript = transcript_list.find_generated_transcript(preferred_langs)
+            except Exception:
+                selected_transcript = None
+
+        # 3) Try translating any available transcript to English
+        if selected_transcript is None:
+            for t in transcript_list:
+                if getattr(t, 'is_translatable', False):
+                    try:
+                        selected_transcript = t.translate('en')
+                        break
+                    except Exception:
+                        continue
+
+        # 4) Fallback: use any available transcript
+        if selected_transcript is None:
+            try:
+                selected_transcript = next(iter(transcript_list))
+            except StopIteration:
+                raise NoTranscriptFound(video_id)
+
+        entries = selected_transcript.fetch()
+        text_chunks = []
+        for item in entries:
+            text = item.get('text') or ''
+            if not text:
+                continue
+            text_chunks.append(text)
+
+        transcript_text = " ".join(text_chunks).strip()
+        if not transcript_text:
+            return None, f"Empty transcript received for video ID: {video_id}."
+        return transcript_text, None
+
     except NoTranscriptFound:
-        return None, f"Could not retrieve a transcript for the video with ID: {video_id}. Transcripts may be disabled or the video may not have a transcript."
+        return None, f"No transcript found for the video with ID: {video_id}."
     except TranscriptsDisabled:
         return None, f"Transcripts are disabled for the video with ID: {video_id}."
     except Exception as e:
-        # This will catch other errors, like the parsing error from the bug report
-        return None, f"An unexpected error occurred while fetching the transcript for video ID {video_id}: {str(e)}"
+        # Handle common upstream issues more clearly
+        message = str(e)
+        if '429' in message or 'TooManyRequests' in message:
+            return None, "YouTube rate-limited the request. Please try again later."
+        if 'no element found' in message:
+            return None, (
+                f"Received an empty response when fetching transcript for video ID {video_id}. "
+                "The video may be restricted or temporarily unavailable."
+            )
+        # Generic fallback
+        return None, (
+            f"An unexpected error occurred while fetching the transcript for video ID {video_id}: {message}"
+        )

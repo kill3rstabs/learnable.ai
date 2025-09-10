@@ -7,7 +7,8 @@ from ninja.files import UploadedFile
 from core.gemini import GeminiService
 from constants import (
     MINDMAP_GENERATION_PROMPT, FLASHCARD_GENERATION_PROMPT, get_mcq_quiz_prompt,
-    TOPIC_EXTRACTION_PROMPT
+    TOPIC_EXTRACTION_PROMPT,
+    YOUTUBE_URL_SUMMARY_PROMPT, YOUTUBE_URL_MINDMAP_PROMPT, YOUTUBE_URL_FLASHCARD_PROMPT
 )
 from schema import (
     MCQQuizStructuredOutput, MCQQuestion, MindmapNode
@@ -19,7 +20,100 @@ class LearningService:
     """Handles learning content generation operations."""
 
     def __init__(self, gemini_service: GeminiService):
+        # Gemini LLM service wrapper
         self.gemini_service = gemini_service
+
+    # ==============================
+    # URL-based generation methods
+    # ==============================
+
+    def summarize_from_url(self, url: str) -> Dict[str, Any]:
+        """
+        Summarize a YouTube video by providing only the URL to Gemini.
+        Returns a dict with success status and summary or error message.
+        """
+        try:
+            # Instruct Gemini to access/analyze the URL and produce a summary
+            summary_text = self.gemini_service.run_prompt(YOUTUBE_URL_SUMMARY_PROMPT, url)
+            summary_text = summary_text.strip()
+            if not summary_text:
+                return {"success": False, "error": "Empty summary returned from model."}
+            return {"success": True, "summary": summary_text}
+        except Exception as e:
+            return {"success": False, "error": f"Error summarizing from URL: {str(e)}"}
+
+    def mindmap_from_url(self, url: str) -> Dict[str, Any]:
+        """
+        Generate a mindmap JSON structure by giving Gemini the YouTube URL directly.
+        """
+        try:
+            # Ask Gemini for JSON-only mindmap
+            mindmap_json = self.gemini_service.run_prompt(YOUTUBE_URL_MINDMAP_PROMPT, url)
+            mindmap_json = self._clean_json_response(mindmap_json)
+            mindmap_data = json.loads(mindmap_json)
+            return {
+                "success": True,
+                "mindmap": MindmapNode(**mindmap_data)
+            }
+        except json.JSONDecodeError as e:
+            return {"success": False, "error": f"Failed to parse mindmap JSON: {str(e)}."}
+        except Exception as e:
+            return {"success": False, "error": f"Error generating mindmap from URL: {str(e)}"}
+
+    def flashcards_from_url(self, url: str) -> Dict[str, Any]:
+        """
+        Generate flashcards (JSON array) by giving Gemini the YouTube URL directly.
+        """
+        try:
+            flashcards_json = self.gemini_service.run_prompt(YOUTUBE_URL_FLASHCARD_PROMPT, url)
+            flashcards_json = self._clean_json_response(flashcards_json)
+            flashcards_list = json.loads(flashcards_json)
+            if not isinstance(flashcards_list, list):
+                return {"success": False, "error": "Model did not return a JSON array for flashcards."}
+            return {
+                "success": True,
+                "flashcards": flashcards_list,
+                "total_cards": len(flashcards_list)
+            }
+        except json.JSONDecodeError as e:
+            return {"success": False, "error": f"Failed to parse flashcards JSON: {str(e)}."}
+        except Exception as e:
+            return {"success": False, "error": f"Error generating flashcards from URL: {str(e)}"}
+
+    def mcq_from_url(self, url: str, num_questions: int = 10) -> Dict[str, Any]:
+        """
+        Generate MCQ quiz questions by giving Gemini the YouTube URL directly.
+        Uses structured output schema for robust parsing.
+        """
+        try:
+            # Use structured output to ensure predictable question schema
+            structured_llm = self.gemini_service.llm.with_structured_output(MCQQuizStructuredOutput)
+            prompt = (
+                f"Access and analyze the content at the following YouTube URL and create {num_questions} "
+                f"multiple choice questions with explanations. URL: {url}"
+            )
+            result = structured_llm.invoke(prompt)
+
+            # Convert structured output to expected format
+            questions = []
+            for q in result.questions:
+                questions.append(MCQQuestion(
+                    question=q.question,
+                    options=[q.option_a, q.option_b, q.option_c, q.option_d],
+                    correct_answer=q.correct_answer,
+                    explanation=q.explanation
+                ))
+
+            return {
+                "success": True,
+                "quiz": questions
+            }
+        except Exception as e:
+            return {"success": False, "error": f"Error generating MCQ quiz from URL: {str(e)}"}
+
+    # ==============================
+    # Existing content extraction and generation
+    # ==============================
 
     def _get_content_from_source(
         self,

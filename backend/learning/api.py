@@ -62,15 +62,15 @@ def summarize_content(
         # Handle text or YouTube URL input
         if data and data.text:
             if is_youtube_url(data.text):
+                # New behavior: Summarize directly from URL via Gemini
                 content_type = "youtube"
                 original_text = data.text
-                transcript, error = get_youtube_transcript(data.text)
-                if error:
-                    return {"error": error}
-                summary, error = media_processor.summarize_text(transcript)
-                if error:
-                    return {"error": error}
-                word_count_original = len(transcript.split())
+                url_result = learning_service.summarize_from_url(data.text)
+                if not url_result.get("success"):
+                    return {"error": url_result.get("error", "Failed to summarize from URL")}
+                summary = url_result.get("summary", "")
+                # We cannot compute word_count_original without transcript; set to 0 or omit
+                word_count_original = 0
             else:
                 content_type = "text"
                 original_text = data.text
@@ -151,6 +151,18 @@ def generate_mindmap(request, data: MindmapInput):
     Generate mindmap JSON structure for D3.js visualization (text only)
     """
     try:
+        # If the topic is a YouTube URL, generate directly from URL
+        if data and data.topic and is_youtube_url(data.topic):
+            url_result = learning_service.mindmap_from_url(data.topic)
+            if url_result["success"]:
+                return MindmapOutput(
+                    success=True,
+                    topic=data.topic,
+                    mindmap=url_result["mindmap"]
+                )
+            else:
+                return {"error": url_result.get("error", "Failed to generate mindmap from URL")}
+
         result = learning_service.generate_mindmap(data.topic)
         
         if result["success"]:
@@ -179,7 +191,20 @@ def generate_mindmap_multimedia(
     """
     try:
         topic = data.topic if data else None
-        
+
+        # Fast-path: YouTube URL → generate directly from URL via Gemini
+        if data and data.topic and is_youtube_url(data.topic):
+            url_result = learning_service.mindmap_from_url(data.topic)
+            if url_result["success"]:
+                return MindmapOutput(
+                    success=True,
+                    topic=data.topic,
+                    mindmap=url_result["mindmap"],
+                    content_type="youtube"
+                )
+            else:
+                return {"error": url_result.get("error", "Failed to generate mindmap from URL")}
+
         # Log file information for debugging
         if audio_file:
             print(f"Processing audio file for mindmap: {audio_file.name}, size: {audio_file.size}")
@@ -217,6 +242,19 @@ def generate_mcq_quiz(request, data: MCQQuizInput):
     Generate MCQ quiz questions using Gemini API with structured output (text only)
     """
     try:
+        # If content is a YouTube URL, generate directly from URL
+        if data and data.content and is_youtube_url(data.content):
+            url_result = learning_service.mcq_from_url(data.content, data.num_questions)
+            if url_result["success"]:
+                return MCQQuizOutput(
+                    success=True,
+                    content=data.content,
+                    num_questions=data.num_questions,
+                    quiz=url_result["quiz"]
+                )
+            else:
+                return {"error": url_result.get("error", "Failed to generate MCQ from URL")}
+
         result = learning_service.generate_mcq_quiz(data.content, data.num_questions)
         
         if result["success"]:
@@ -247,6 +285,21 @@ def generate_mcq_quiz_multimedia(
     try:
         content = data.content if data else None
         num_questions = data.num_questions if data else 10
+
+        # Fast-path: YouTube URL → generate directly from URL via Gemini
+        if data and data.content and is_youtube_url(data.content):
+            url_result = learning_service.mcq_from_url(data.content, num_questions)
+            if url_result["success"]:
+                return MCQQuizOutput(
+                    success=True,
+                    content=data.content,
+                    num_questions=num_questions,
+                    quiz=url_result["quiz"],
+                    content_type="youtube"
+                )
+            else:
+                return {"error": url_result.get("error", "Failed to generate MCQ from URL")}
+
         result = learning_service.generate_mcq_quiz_from_multimedia(
             content=content,
             num_questions=num_questions,
@@ -275,6 +328,19 @@ def generate_flashcards(request, data: FlashcardInput):
     Generate flashcards with structured output (text only)
     """
     try:
+        # If content is a YouTube URL, generate directly from URL
+        if data and data.content and is_youtube_url(data.content):
+            url_result = learning_service.flashcards_from_url(data.content)
+            if url_result["success"]:
+                return FlashcardOutput(
+                    success=True,
+                    content=data.content,
+                    flashcards=url_result["flashcards"],
+                    total_cards=url_result["total_cards"]
+                )
+            else:
+                return {"error": url_result.get("error", "Failed to generate flashcards from URL")}
+
         result = learning_service.generate_flashcards(data.content)
         
         if result["success"]:
@@ -304,6 +370,21 @@ def generate_flashcards_multimedia(
     """
     try:
         content = data.content if data else None
+
+        # Fast-path: YouTube URL → generate directly from URL via Gemini
+        if data and data.content and is_youtube_url(data.content):
+            url_result = learning_service.flashcards_from_url(data.content)
+            if url_result["success"]:
+                return FlashcardOutput(
+                    success=True,
+                    content=data.content,
+                    flashcards=url_result["flashcards"],
+                    total_cards=url_result["total_cards"],
+                    content_type="youtube"
+                )
+            else:
+                return {"error": url_result.get("error", "Failed to generate flashcards from URL")}
+
         result = learning_service.generate_flashcards_from_multimedia(
             content=content,
             audio_file=audio_file,
