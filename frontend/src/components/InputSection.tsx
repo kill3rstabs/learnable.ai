@@ -22,6 +22,20 @@ import {
   Trash2,
   Plus
 } from "lucide-react";
+import { ArrowRight, Video, Headphones, Target, Menu,
+
+
+  Wand2,
+
+
+  Map,
+  
+  Share2,
+  Download,
+  Check,
+  Star,
+  Zap,
+  Heart, } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useApiKey } from "@/hooks/useApiKey";
 import FileUpload from "@/components/ui/file-upload";
@@ -217,6 +231,22 @@ const InputSection: React.FC<InputSectionProps> = ({
           <p className="text-muted-foreground max-w-2xl mx-auto">
             Upload your content and generate different types of learning materials on demand.
           </p>
+         < div className="text-center py-8">
+          <div className="inline-flex items-center gap-6 bg-card rounded-2xl p-6 shadow-card">
+            <div className="flex items-center gap-2">
+              <Video className="h-5 w-5 text-primary" />
+              <span className="text-sm font-medium">Video</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Headphones className="h-5 w-5 text-secondary" />
+              <span className="text-sm font-medium">Audio</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <FileText className="h-5 w-5 text-accent" />
+              <span className="text-sm font-medium">Text</span>
+            </div>
+          </div>
+        </div>
         </div>
 
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
