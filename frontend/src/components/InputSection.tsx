@@ -224,9 +224,9 @@ const InputSection: React.FC<InputSectionProps> = ({
         }
       };
   return (
-    <section className="py-16 bg-muted/30">
+<section className="py-16 bg-green-50">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
+        <div className="text-center mb-12 ">
           <h2 className="text-3xl font-bold mb-4 text-foreground">Create Learning Resources</h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
             Upload your content and generate different types of learning materials on demand.
@@ -251,43 +251,43 @@ const InputSection: React.FC<InputSectionProps> = ({
 
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Left Side - File Upload & Input */}
-          <Card className="p-6 bg-card shadow-elevated border-0">
+          <Card className="p-6 shadow-xl border-0">
             <div className="mb-6">
-              <h3 className="text-xl font-bold mb-4 text-foreground">Input Content</h3>
+              <h3 className="text-xl font-bold mb-4 text-gray-700">Input Content</h3>
               
               {/* Input Method Tabs */}
               <Tabs value={inputMethod} onValueChange={(value) => setInputMethod(value as any)} className="w-full">
-                <TabsList className="grid w-full grid-cols-3 mb-6">
-                  <TabsTrigger value="text" className="flex items-center gap-2">
+                <TabsList className="grid w-full grid-cols-3 mb-6 bg-green-500">
+                  <TabsTrigger value="text" className=" mr-1 flex items-center gap-2 text-white focus:text-gray-700">
                     <Type className="h-4 w-4" />
-                    Text
+                    <div className="">Text</div>
                   </TabsTrigger>
-                  <TabsTrigger value="file" className="flex items-center gap-2">
+                  <TabsTrigger value="file" className="flex items-center gap-2 text-white">
                     <Upload className="h-4 w-4" />
                     Files
                   </TabsTrigger>
-                  <TabsTrigger value="url" className="flex items-center gap-2">
+                  <TabsTrigger value="url" className="ml-1 flex items-center gap-2 text-white">
                     <Link className="h-4 w-4" />
                     URL
                   </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="text" className="space-y-4">
-                  <Label htmlFor="text-input" className="text-base font-medium">
-                    Paste your content
+                  <Label htmlFor="text-input" className="text-gray-900 font-medium">
+                    
                   </Label>
                   <Textarea
                     id="text-input"
                     placeholder="Paste your text content, lecture notes, or any educational material here..."
                     value={textInput}
                     onChange={(e) => setTextInput(e.target.value)}
-                    className="min-h-[300px] text-base resize-none"
+                    className="min-h-[300px] text-gray-900 resize-none border-white"
                     disabled={isProcessing}
                   />
                 </TabsContent>
 
                 <TabsContent value="file" className="space-y-4">
-                  <Label className="text-base font-medium">Upload Files</Label>
+                  <Label className="text-base font-medium"></Label>
                   <FileUpload
                     uploadedFiles={uploadedFiles}
                     isDragOver={isDragOver}
@@ -305,7 +305,7 @@ const InputSection: React.FC<InputSectionProps> = ({
                 </TabsContent>
 
                 <TabsContent value="url" className="space-y-4">
-                  <Label htmlFor="url-input" className="text-base font-medium">
+                  <Label htmlFor="url-input" className="text-gray-600 font-medium">
                     Enter URL
                   </Label>
                   <Input
@@ -334,26 +334,26 @@ const InputSection: React.FC<InputSectionProps> = ({
           </Card>
 
           {/* Right Side - Content Generation */}
-          <Card className="p-6 bg-card shadow-elevated border-0">
+          <Card className="p-6 bg-card shadow-lg border-0">
             <div className="mb-6">
-              <h3 className="text-xl font-bold mb-4 text-foreground">Generate Content</h3>
+              <h3 className="text-xl font-bold mb-4 text-gray-700">Generate Content</h3>
               
               {/* Content Type Tabs */}
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-4 mb-6">
-                  <TabsTrigger value="summary" className="flex items-center gap-2">
+                <TabsList className="grid w-full grid-cols-4 mb-6 bg-green-600">
+                  <TabsTrigger value="summary" className="flex items-center gap-2  text-white">
                     <FileText className="h-4 w-4" />
                     Summary
                   </TabsTrigger>
-                  <TabsTrigger value="mindmap" className="flex items-center gap-2">
+                  <TabsTrigger value="mindmap" className="flex items-center gap-2 text-white">
                     <Brain className="h-4 w-4" />
                     Mindmap
                   </TabsTrigger>
-                  <TabsTrigger value="quiz" className="flex items-center gap-2">
+                  <TabsTrigger value="quiz" className="flex items-center gap-2 text-white">
                     <HelpCircle className="h-4 w-4" />
                     Quiz
                   </TabsTrigger>
-                  <TabsTrigger value="flashcards" className="flex items-center gap-2">
+                  <TabsTrigger value="flashcards" className="flex items-center gap-2 text-white">
                     <BookOpen className="h-4 w-4" />
                     Flashcards
                   </TabsTrigger>
@@ -392,11 +392,12 @@ const InputSection: React.FC<InputSectionProps> = ({
                         Create a concise summary of your content with key points and insights.
                       </p>
                       <Button
-                        variant="hero"
+                        
                         size="lg"
                         onClick={handleGenerateContent}
                         disabled={!hasApiKey || isProcessing || !hasContent() || getLoadingState()}
-                        className="w-full"
+                        className="px-6 py-2 rounded text-white 
+                        bg-gradient-to-r from-green-500 to-green-400"
                       >
                         {getLoadingState() ? (
                           <Loader2 className="h-4 w-4 mr-2 animate-spin" />

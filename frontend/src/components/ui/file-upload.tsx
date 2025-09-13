@@ -113,8 +113,8 @@ const FileUpload: React.FC<FileUploadComponentProps> = ({
         className={cn(
           'border-2 border-dashed rounded-lg p-8 text-center transition-colors',
           isDragOver
-            ? 'border-primary bg-primary/5'
-            : 'border-border hover:border-primary/50',
+            ? 'border-green-700 bg-green-400/5'
+            : 'border-border hover:border-green-500',
           disabled && 'opacity-50 cursor-not-allowed'
         )}
         onDragOver={onDragOver}
@@ -126,7 +126,7 @@ const FileUpload: React.FC<FileUploadComponentProps> = ({
           isDragOver ? 'text-primary' : 'text-muted-foreground'
         )} />
         
-        <h3 className="text-lg font-semibold mb-2">
+        <h3 className="text-lg text-gray-600 font-semibold mb-2">
           {isDragOver ? 'Drop files here' : 'Upload your files'}
         </h3>
         
@@ -135,7 +135,7 @@ const FileUpload: React.FC<FileUploadComponentProps> = ({
         </p>
         
         <Button 
-          variant="outline" 
+          className='bg-green-500 text-white hover:bg-green-600'
           onClick={() => fileInputRef.current?.click()}
           disabled={disabled}
         >

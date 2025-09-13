@@ -24,9 +24,7 @@ All colors MUST be HSL.
     --secondary: 150 60% 50%;
     --secondary-foreground: 210 40% 98%;
 
-    --muted: 220 15% 96%;
-    --muted-foreground: 220 10% 45%;
-
+    
     --accent: 30 100% 55%;
     --accent-foreground: 220 15% 15%;
 
@@ -109,9 +107,7 @@ All colors MUST be HSL.
     @apply border-border;
   }
 
-  body {
-    @apply bg-background text-foreground;
-  }
+  
 }
 
 /* Mermaid Diagram Styles */
