@@ -11,7 +11,11 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 from pathlib import Path
+from dotenv import load_dotenv
+import os
 
+# Load environment variables from .env file
+load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -40,6 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'learning',
     'content',
+    'users',  # NEW: app for authentication and credit management
 ]
 
 MIDDLEWARE = [
@@ -80,8 +85,12 @@ WSGI_APPLICATION = 'api.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.sqlite3'),
+        'NAME': os.getenv('DB_NAME', BASE_DIR / 'db.sqlite3'),
+        'USER': os.getenv('DB_USER'),
+        'PASSWORD': os.getenv('DB_PASSWORD'),
+        'HOST': os.getenv('DB_HOST'),
+        'PORT': os.getenv('DB_PORT'),
     }
 }
 
@@ -221,3 +230,23 @@ LOGGING = {
         },
     },
 }
+
+# =========================
+# JWT Authentication Config
+# =========================
+# Use a separate secret for JWT if provided, otherwise fallback to Django's SECRET_KEY
+JWT_SECRET = os.getenv('JWT_SECRET', SECRET_KEY)
+# Use a standard HMAC algorithm
+JWT_ALGORITHM = 'HS256'
+# Token lifetimes (seconds)
+JWT_ACCESS_TTL_SECONDS = int(os.getenv('JWT_ACCESS_TTL_SECONDS', 60 * 60))          # 1 hour
+JWT_REFRESH_TTL_SECONDS = int(os.getenv('JWT_REFRESH_TTL_SECONDS', 60 * 60 * 24 * 7))  # 7 days
+
+# =========================
+# Credit System Config
+# =========================
+# Define how app "credits" map to Gemini token usage.
+# Example: charge 1 credit per 1k input tokens, 2 credits per 1k output tokens. Min 1 per call.
+CREDITS_PER_1K_INPUT_TOKENS = float(os.getenv('CREDITS_PER_1K_INPUT_TOKENS', 1.0))
+CREDITS_PER_1K_OUTPUT_TOKENS = float(os.getenv('CREDITS_PER_1K_OUTPUT_TOKENS', 2.0))
+MIN_CREDIT_DEBIT_PER_CALL = int(os.getenv('MIN_CREDIT_DEBIT_PER_CALL', 1))

@@ -57,3 +57,4 @@ uritemplate==4.2.0
 urllib3==2.5.0
 youtube-transcript-api==0.6.2
 zstandard==0.23.0
+PyJWT==2.9.0

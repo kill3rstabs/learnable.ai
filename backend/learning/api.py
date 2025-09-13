@@ -7,6 +7,7 @@ from typing import Optional
 from dotenv import load_dotenv
 
 # Core imports
+from users.security import JWTAuth
 from core.gemini import GeminiService
 
 # Service imports
@@ -27,8 +28,8 @@ from schema import (
 from constants import TEXT_SUMMARIZATION_PROMPT
 
 load_dotenv()
-
-router = Router()
+# apply auth class to the api
+router = Router(auth=JWTAuth())
 
 # Initialize services
 gemini_service = GeminiService(model_name="gemini-2.5-flash", temperature=0.7)
