@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from django.db import IntegrityError
 from ninja.router import Router
 
-from .schemas import RegisterIn, LoginIn, TokenOut, UserOut, CreditChangeIn
+from .schemas import RegisterIn, LoginIn, TokenOut, UserOut, CreditChangeIn, ErrorOut
 from .auth import create_tokens, decode_token
 from .security import jwt_auth
 from .services import add_credits, deduct_credits, get_profile
@@ -12,7 +12,7 @@ from .services import add_credits, deduct_credits, get_profile
 router = Router()
 
 
-@router.post("/auth/register", response=TokenOut)
+@router.post("/auth/register", response={200: TokenOut, 409: ErrorOut})
 def register(request, payload: RegisterIn):
     """
     Register a new user account.
@@ -34,7 +34,7 @@ def register(request, payload: RegisterIn):
     return {"access": access, "refresh": refresh}
 
 
-@router.post("/auth/login", response=TokenOut)
+@router.post("/auth/login", response={200: TokenOut, 401: ErrorOut})
 def login(request, payload: LoginIn):
     """
     Authenticate with username and password.
@@ -48,7 +48,7 @@ def login(request, payload: LoginIn):
     return {"access": access, "refresh": refresh}
 
 
-@router.post("/auth/refresh", response=TokenOut)
+@router.post("/auth/refresh", response={200: TokenOut, 401: ErrorOut})
 def refresh(request, refresh: str):
     """
     Exchange a valid refresh token for a new pair of tokens.

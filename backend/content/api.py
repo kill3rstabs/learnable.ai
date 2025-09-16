@@ -146,8 +146,8 @@ def run_gemini(request, payload: PromptIn):
         return 402, {"detail": str(e)}
     except Exception as e:
         return 500, {"detail": f"Failed to run model: {e}"}
-
-
+    
+    
 
 
 

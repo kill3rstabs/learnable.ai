@@ -17,7 +17,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <HeroSection />
+      <InputSection {...fileUpload} {...processing} results={processing.results} />
     </div>
   );
 };

@@ -30,4 +30,9 @@ class UserOut(BaseModel):
 
 class CreditChangeIn(BaseModel):
     """Schema to add or deduct credits in a simple way."""
-    amount: int 
+    amount: int
+
+
+class ErrorOut(BaseModel):
+    """Standard error response with detail message."""
+    detail: str 
