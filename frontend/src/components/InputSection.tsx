@@ -514,12 +514,12 @@ const InputSection: React.FC<InputSectionProps> = ({
 
             {/* Processing Status */}
             {isProcessing && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="bg-emerald-50 border border-emerald-400 rounded-lg p-4">
                 <div className="flex items-center gap-3">
-                  <Loader2 className="h-5 w-5 text-blue-600 animate-spin" />
+                  <Loader2 className="h-5 w-5 text-emerald-600 animate-spin" />
                   <div>
-                    <p className="text-sm font-medium text-blue-800">Processing...</p>
-                    <p className="text-xs text-blue-600">{processingStatus.message}</p>
+                    <p className="text-sm font-medium text-emerald-800">Processing...</p>
+                    <p className="text-xs text-emerald-700">{processingStatus.message}</p>
                   </div>
                 </div>
               </div>

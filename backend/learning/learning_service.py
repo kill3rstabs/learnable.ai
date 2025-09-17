@@ -214,10 +214,18 @@ class LearningService:
                 return {"success": False, "error": error}
 
             structured_llm = self.gemini_service.llm.with_structured_output(MCQQuizStructuredOutput)
-            prompt = get_mcq_quiz_prompt(content_text, num_questions)
+            prompt = f"{get_mcq_quiz_prompt(num_questions)}\n\nContent:\n{content_text}"
             result = structured_llm.invoke(prompt)
 
-            questions = [MCQQuestion(**q.dict()) for q in result.questions]
+            questions = [
+                MCQQuestion(
+                    question=q.question,
+                    options=[q.option_a, q.option_b, q.option_c, q.option_d],
+                    correct_answer=q.correct_answer,
+                    explanation=q.explanation,
+                )
+                for q in result.questions
+            ]
             
             return {
                 "success": True,

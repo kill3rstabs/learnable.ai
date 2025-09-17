@@ -60,8 +60,8 @@ const HeroSection = () => {
           {/* Left Content */}
           <div className="justify-items-start text-left py-6">
             <div className="inline-flex bg-green-100 px-3 gap-2 bg-muted/50 rounded-full py-2 mb-6">
-              <Zap className="h-4 w-4 text-accent" />
-              <span className="text-sm font-medium text-muted-foreground">Powered by Google Gemini AI</span>
+              {/* <Zap className="h-4 w-4 text-accent" /> */}
+              {/* <span className="text-sm font-medium text-muted-foreground">Powered by Google Gemini AI</span> */}
             </div>
             
             <h1 className="text-4xl md:text-6xl font-bold mb-6 text-emerald-600">
@@ -268,11 +268,9 @@ const HeroSection = () => {
             </div>
 
             <div className="relative fade-in-on-scroll">
-              <div className="bg-white rounded-2xl shadow-lg p-4 md:p-8">
+              <div className="bg-white rounded-2xl shadow-lg px-4 md:px-6 py-4 w-fit mx-auto overflow-hidden">
                 {/*image placeholder - you can add your comic/illustration here*/}
-                <div className="h-64 bg-gray-100 rounded-lg flex items-center justify-center">
-                  <p className="text-gray-500">Your comic/illustration goes here</p>
-                </div>
+                <img src="/meme.png" alt="Hopnote Mascot" className="block w-104 h-80 md:w-[40rem] md:h-[28rem] object-contain" />
               </div>
               <div className="mt-6 text-center">
                 <p className="text-sm md:text-base font-bold text-[#1B1B1B] bg-green-200 inline-block px-4 py-2 rounded-full">
@@ -289,11 +287,12 @@ const HeroSection = () => {
         <div className="w-full px-4 sm:px-6 lg:px-8 text-center">
           <div className="fade-in-on-scroll">
             <div className="flex justify-center mb-6">
-              <img 
+              {/* <img 
                 src="https://page.gensparksite.com/v1/base64_upload/b52f64b0395f7ab5389890c2946d7cd0" 
                 alt="Hopnote Mascot" 
                 className="w-16 h-16 object-contain"
-              />
+              /> */}
+              <img src="/hopenote-logo.png" alt="Hopnote Mascot" className="w-16 h-16 object-contain" />
             </div>
             <h2 className="text-3xl md:text-4xl font-bold text-[#1B1B1B] mb-6">
               Ready to Transform Your Learning?

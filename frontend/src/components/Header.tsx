@@ -1,42 +1,73 @@
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Brain, Sparkles } from "lucide-react";
-import SettingsModal from "./SettingsModal";
-import ApiKeyStatus from "./ApiKeyStatus";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+
 const Header = () => {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const isHome = pathname === "/";
-  return <header className="border-b bg-card/50 sticky top-0 z-50">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-20 py-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1">
-            <img src="/hopenote-logo.png" alt="Hopnote" className="h-8 w-10 md:h-8 md:w-10 object-contain" />
-            <div>
-              {/* text should be in good font */}
-              {/* <h1 className="text-xl font-bold text-foreground font-['Courier New']">HopNote</h1> */}
-              <div className="text-emerald-950 text-lg">Hopnote</div>
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 6);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  return (
+    <header
+      className={[
+        "sticky top-0 z-50 border-b transition-all",
+        "bg-white/60 dark:bg-neutral-900/50 backdrop-blur-xl",
+        scrolled
+          ? "shadow-[0_8px_24px_rgba(2,6,23,0.08)] border-emerald-600/15"
+          : "shadow-none border-transparent",
+      ].join(" ")}
+    >
+      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-20">
+        <div className="flex h-14 sm:h-[60px] items-center justify-between">
+          {/* Brand */}
+          <Link to="/" className="flex items-center gap-2 group">
+            <img
+              src="/hopenote-logo.png"
+              alt="Hopnote"
+              className="h-8 w-10 md:h-8 md:w-10 object-contain transition-transform duration-200 group-hover:scale-[1.22]"
+            />
+            <div className="leading-none">
+              <img
+                src="/hopnote-text-logo.png"
+                alt="Hopnote"
+                className="h-6 w-auto object-contain mt-2"
+              />
             </div>
-          </div>
-          
+          </Link>
+
+          {/* Actions */}
           <div className="flex items-center gap-3">
-            
-            {/* <SettingsModal />
-            <Button className="text-gray-600 hover:text-green-600 hover:bg-white bg-white hidden sm:inline-flex" size="sm">
-              My Library
-            </Button> */}
             {isHome && (
-              <Button
-                className="bg-emerald-600 text-white font-normal rounded-3xl px-5 hover:bg-emerald-600 inline-flex"
-                size="sm"
-                onClick={() => navigate('/login')}
-              >
-                Get Started
-              </Button>
+             <Button
+             size="sm"
+             onClick={() => navigate("/login")}
+             className="group relative inline-flex items-center justify-center rounded-3xl px-5
+                        bg-emerald-600 text-white font-normal hover:bg-emerald-600/95
+                        transition-colors duration-200 focus:outline-none"
+           >
+             <span
+               className="buttonTicker select-none"
+               data-label="Get Started"
+             >
+               <span className="line">Get Started</span>
+             </span>
+           </Button>
+           
             )}
           </div>
         </div>
       </div>
-    </header>;
+      <div className="pointer-events-none h-px w-full bg-gradient-to-r from-transparent via-emerald-600/30 to-transparent" />
+    </header>
+  );
 };
+
 export default Header;

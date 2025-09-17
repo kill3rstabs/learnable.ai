@@ -76,7 +76,7 @@ const FileUpload: React.FC<FileUploadComponentProps> = ({
       case 'error':
         return <AlertCircle className="h-4 w-4 text-red-500" />;
       case 'uploading':
-        return <Loader2 className="h-4 w-4 text-blue-500 animate-spin" />;
+        return <Loader2 className="h-4 w-4 text-emerald-600 animate-spin" />;
       default:
         return null;
     }
@@ -89,7 +89,7 @@ const FileUpload: React.FC<FileUploadComponentProps> = ({
       case 'error':
         return 'bg-red-50 border-red-200';
       case 'uploading':
-        return 'bg-blue-50 border-blue-200';
+        return 'bg-emerald-50 border-emerald-400';
       default:
         return 'bg-gray-50 border-gray-200';
     }
@@ -135,7 +135,7 @@ const FileUpload: React.FC<FileUploadComponentProps> = ({
         </p>
         
         <Button 
-          className='bg-green-500 text-white hover:bg-green-600'
+          className='bg-emerald-600 text-white hover:bg-emerald-500'
           onClick={() => fileInputRef.current?.click()}
           disabled={disabled}
         >
