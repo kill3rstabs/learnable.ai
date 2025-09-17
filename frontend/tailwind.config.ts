@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import animate from "tailwindcss-animate";
 
 export default {
   darkMode: ["class"],
@@ -79,41 +80,33 @@ export default {
         elevated: "var(--shadow-elevated)",
       },
       keyframes: {
-		labelOrbit: {
-			/* Start at normal position */
-			"0%": {
-			  transform: "translateY(0%)",
-			  animationTimingFunction: "cubic-bezier(0.55, 0.06, 0.68, 0.19)" /* fast-up (ease-in-ish) */,
-			},
-			/* Fast slide up to hide the first line */
-			"30%": {
-			  transform: "translateY(-100%)",
-			  animationTimingFunction: "steps(1, end)" /* snap/tp for the wrap */,
-			},
-			/* Instantly place below the view to simulate circular path */
-			"31%": {
-			  transform: "translateY(100%)",
-			  animationTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)" /* slow, luxurious return */,
-			},
-			/* Slow rise from bottom back to original */
-			"100%": {
-			  transform: "translateY(0%)",
-			},
-		  },
-		labelTicker: {
-			"0%, 20%": { transform: "translateY(0%)" },       // pause at start
-			"45%": { transform: "translateY(-100%)" },        // slide up
-			"55%": { transform: "translateY(100%)" },         // jump below
-			"80%, 100%": { transform: "translateY(0%)" },     // slide back & pause
-		  },
-		// labelSlideUp: {
-		// 	"0%":   { transform: "translateY(0%)" },
-		// 	"100%": { transform: "translateY(-100%)" },
-		// },
-		// labelTickerOnce: {
-		// 	"0%":   { transform: "translateY(0%)" },
-		// 	"100%": { transform: "translateY(-100%)" },
-		//   },
+        labelOrbit: {
+          /* Start at normal position */
+          "0%": {
+            transform: "translateY(0%)",
+            animationTimingFunction: "cubic-bezier(0.55, 0.06, 0.68, 0.19)",
+          },
+          /* Fast slide up to hide the first line */
+          "30%": {
+            transform: "translateY(-100%)",
+            animationTimingFunction: "steps(1, end)",
+          },
+          /* Instantly place below the view to simulate circular path */
+          "31%": {
+            transform: "translateY(100%)",
+            animationTimingFunction: "cubic-bezier(0.16, 1, 0.3, 1)",
+          },
+          /* Slow rise from bottom back to original */
+          "100%": {
+            transform: "translateY(0%)",
+          },
+        },
+        labelTicker: {
+          "0%, 20%": { transform: "translateY(0%)" },
+          "45%": { transform: "translateY(-100%)" },
+          "55%": { transform: "translateY(100%)" },
+          "80%, 100%": { transform: "translateY(0%)" },
+        },
         "accordion-down": {
           from: { height: "0" },
           to: { height: "var(--radix-accordion-content-height)" },
@@ -139,20 +132,32 @@ export default {
           "0%, 100%": { transform: "scale(1) translateY(0)" },
           "50%": { transform: "scale(1.07) translateY(-1px)" },
         },
+        // Slide-in from the right for CTA buttons
+        slideInRight: {
+          "0%": { opacity: "0", transform: "translateX(16px)" },
+          "100%": { opacity: "1", transform: "translateX(0)" },
+        },
+        // Subtle bounce animation
+        bounceSubtle: {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-16px)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
-		labelOrbit: "labelOrbit 2.2s linear infinite",
-		labelTicker: "labelTicker 1.5s ease-in-out infinite",
-		// labelSlideUp: "labelSlideUp 0.35s ease-out forwards",
-		// labelTickerOnce: "labelTickerOnce 300ms ease-out forwards",
+        labelOrbit: "labelOrbit 2.2s linear infinite",
+        labelTicker: "labelTicker 1.5s ease-in-out infinite",
         "accordion-up": "accordion-up 0.2s ease-out",
         float: "float 3s ease-in-out infinite",
         "pulse-glow": "pulse-glow 2s ease-in-out infinite",
         // NEW
         pulseButton: "pulseButton 2.5s ease-in-out infinite",
+        // Use on CTA: animate-slide-in-right
+        "slide-in-right": "slideInRight 520ms cubic-bezier(0.22, 1, 0.36, 1) both",
+        // Subtle bounce for mascot
+        "bounce-subtle": "bounceSubtle 2s ease-in-out infinite",
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [animate],
 } satisfies Config;

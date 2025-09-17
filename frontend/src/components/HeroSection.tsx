@@ -95,7 +95,7 @@ const HeroSection = () => {
 
           {/* Right Content - Mascot */}
           <div className="flex justify-center lg:justify-end ">
-            <div className="relative">
+            <div className="relative group">
               <img 
                 src="/Landing-page-3.png" 
                 alt="Hopnote Superhero Mascot" 

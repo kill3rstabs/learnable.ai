@@ -1,3 +1,4 @@
+// import "./ticker.css";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -51,7 +52,7 @@ const Header = () => {
              onClick={() => navigate("/login")}
              className="group relative inline-flex items-center justify-center rounded-3xl px-5
                         bg-emerald-600 text-white font-normal hover:bg-emerald-600/95
-                        transition-colors duration-200 focus:outline-none"
+                        transition-colors duration-200 focus:outline-none animate-slide-in-right"
            >
              <span
                className="buttonTicker select-none"
