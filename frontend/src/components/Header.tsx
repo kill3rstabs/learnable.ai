@@ -14,7 +14,7 @@ const Header = () => {
             <div>
               {/* text should be in good font */}
               {/* <h1 className="text-xl font-bold text-foreground font-['Courier New']">HopNote</h1> */}
-              <img src="/hopnote-text-logo.png" alt="Hopnote" className="h-10 w-14 md:h-10 md:w-14 object-contain mt-2" />
+              <div className="text-emerald-950 text-lg">Hopnote</div>
             </div>
           </div>
           
