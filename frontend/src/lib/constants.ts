@@ -50,6 +50,10 @@ export const API_ENDPOINTS = {
   GENERATE_FLASHCARDS: '/learning/generate-flashcards',
   GENERATE_FLASHCARDS_MULTIMEDIA: '/learning/generate-flashcards-multimedia',
   HEALTH_CHECK: '/learning/hello',
+  AUTH_LOGIN: '/users/auth/login',
+  AUTH_REGISTER: '/users/auth/register',
+  AUTH_REFRESH: '/users/auth/refresh',
+  AUTH_ME: '/users/auth/me',
 };
 
 // Processing states

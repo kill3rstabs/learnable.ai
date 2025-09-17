@@ -27,36 +27,97 @@ class ApiClient {
     this.timeout = API_CONFIG.TIMEOUT;
   }
 
+  // =====================
+  // Auth token management
+  // =====================
+  private ACCESS_KEY = 'auth_access';
+  private REFRESH_KEY = 'auth_refresh';
+
+  private getAccess() { return localStorage.getItem(this.ACCESS_KEY) || ''; }
+  private getRefresh() { return localStorage.getItem(this.REFRESH_KEY) || ''; }
+  private setTokens(access: string, refresh: string) {
+    localStorage.setItem(this.ACCESS_KEY, access);
+    localStorage.setItem(this.REFRESH_KEY, refresh);
+  }
+  private clearTokens() {
+    localStorage.removeItem(this.ACCESS_KEY);
+    localStorage.removeItem(this.REFRESH_KEY);
+  }
+  private buildAuthHeaders(): HeadersInit {
+    const access = this.getAccess();
+    return access ? { Authorization: `Bearer ${access}` } : {};
+  }
+
+  private async refreshTokensOnce(): Promise<boolean> {
+    const refresh = this.getRefresh();
+    if (!refresh) return false;
+    try {
+      const res = await fetch(`${this.baseUrl}${API_ENDPOINTS.AUTH_REFRESH}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh }),
+      });
+      if (!res.ok) return false;
+      const data = await res.json();
+      if (data?.access && data?.refresh) {
+        this.setTokens(data.access, data.refresh);
+        return true;
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  }
+
   private async makeRequest<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
+    auth: boolean = false
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
-    
+
     const defaultOptions: RequestInit = {
       headers: {
         'Content-Type': 'application/json',
+        ...(auth ? this.buildAuthHeaders() : {}),
         ...options.headers,
       },
     };
 
     const finalOptions = { ...defaultOptions, ...options };
 
-    try {
+    const doFetch = async (): Promise<T> => {
       const response = await fetch(url, finalOptions);
-      
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(String(response.status));
       }
-
       const data = await response.json();
-      
-      if (data.error) {
-        throw new Error(data.error);
+      if ((data as any).error) {
+        throw new Error((data as any).error);
       }
+      return data as T;
+    };
 
-      return data;
-    } catch (error) {
+    try {
+      return await doFetch();
+    } catch (error: any) {
+      // If unauthorized on an auth-required call, try refresh once
+      if (auth && error instanceof Error && error.message === '401') {
+        const refreshed = await this.refreshTokensOnce();
+        if (refreshed) {
+          const retryOptions: RequestInit = {
+            ...finalOptions,
+            headers: {
+              ...finalOptions.headers as HeadersInit,
+              ...this.buildAuthHeaders(),
+            },
+          };
+          const retryRes = await fetch(url, retryOptions);
+          if (!retryRes.ok) throw new Error(String(retryRes.status));
+          return await retryRes.json();
+        }
+        this.clearTokens();
+      }
       console.error('API request failed:', error);
       throw this.handleError(error);
     }
@@ -65,7 +126,8 @@ class ApiClient {
   private async makeFileRequest<T>(
     endpoint: string,
     formData: FormData,
-    onProgress?: (progress: number) => void
+    onProgress?: (progress: number) => void,
+    auth: boolean = false
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
     console.log('makeFileRequest called with URL:', url);
@@ -121,6 +183,14 @@ class ApiClient {
         });
 
         xhr.open('POST', url, true);
+
+        // Attach Authorization header when required
+        if (auth) {
+          const access = this.getAccess();
+          if (access) {
+            xhr.setRequestHeader('Authorization', `Bearer ${access}`);
+          }
+        }
         
         // Don't set Content-Type header for FormData - let the browser set it with boundary
         console.log('Sending XHR request to:', url);
@@ -144,23 +214,68 @@ class ApiClient {
     return new Error(ERROR_MESSAGES.NETWORK_ERROR);
   }
 
+  // Public auth helpers
+  async login(username: string, password: string) {
+    const data = await this.makeRequest<{ access: string; refresh: string }>(
+      API_ENDPOINTS.AUTH_LOGIN,
+      { method: 'POST', body: JSON.stringify({ username, password }) }
+    );
+    this.setTokens(data.access, data.refresh);
+    return data;
+  }
+
+  async register(username: string, email: string, password: string) {
+    const data = await this.makeRequest<{ access: string; refresh: string }>(
+      API_ENDPOINTS.AUTH_REGISTER,
+      { method: 'POST', body: JSON.stringify({ username, email, password }) }
+    );
+    this.setTokens(data.access, data.refresh);
+    return data;
+  }
+
+  async me() {
+    return this.makeRequest<{ id: number; username: string; email: string; credits: number }>(
+      API_ENDPOINTS.AUTH_ME,
+      { method: 'GET' },
+      true
+    );
+  }
+
+  // NEW: Generic authorized request helper using access token in localStorage
+  async authorizedRequest<T = any>(
+    method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
+    route: string,
+    payload?: any
+  ): Promise<T> {
+    const options: RequestInit = { method };
+    if (payload !== undefined && method !== 'GET') {
+      options.body = JSON.stringify(payload);
+    }
+    return this.makeRequest<T>(route, options, true);
+  }
+
+  // =====================
   // Health check
+  // =====================
   async healthCheck(): Promise<ApiResponse> {
     return this.makeRequest<ApiResponse>(API_ENDPOINTS.HEALTH_CHECK);
   }
 
-  // Text summarization
+  // =====================
+  // Text summarization (AUTH)
+  // =====================
   async summarizeText(input: SummarizeTextInput): Promise<SummarizeTextOutput> {
     return this.makeRequest<SummarizeTextOutput>(
       API_ENDPOINTS.SUMMARIZE_CONTENT,
       {
         method: 'POST',
         body: JSON.stringify(input),
-      }
+      },
+      true
     );
   }
 
-  // File-based summarization
+  // File-based summarization (AUTH)
   async summarizeFile(
     file: File,
     onProgress?: (progress: number) => void
@@ -171,11 +286,12 @@ class ApiClient {
     return this.makeFileRequest<SummarizeTextOutput>(
       API_ENDPOINTS.SUMMARIZE_CONTENT,
       formData,
-      onProgress
+      onProgress,
+      true
     );
   }
 
-  // Multimedia summarization
+  // Multimedia summarization (AUTH)
   async summarizeMultimedia(
     audioFile?: File,
     videoFile?: File,
@@ -201,22 +317,24 @@ class ApiClient {
     return this.makeFileRequest<SummarizeTextOutput>(
       API_ENDPOINTS.SUMMARIZE_CONTENT,
       formData,
-      onProgress
+      onProgress,
+      true
     );
   }
 
-  // Mindmap generation (text only)
+  // Mindmap generation (text only) (AUTH)
   async generateMindmap(input: MindmapInput): Promise<MindmapOutput> {
     return this.makeRequest<MindmapOutput>(
       API_ENDPOINTS.GENERATE_MINDMAP,
       {
         method: 'POST',
         body: JSON.stringify(input),
-      }
+      },
+      true
     );
   }
 
-  // Mindmap generation (multimedia)
+  // Mindmap generation (multimedia) (AUTH)
   async generateMindmapMultimedia(
     audioFile?: File,
     videoFile?: File,
@@ -245,11 +363,12 @@ class ApiClient {
     return this.makeFileRequest<MindmapOutput>(
       API_ENDPOINTS.GENERATE_MINDMAP_MULTIMEDIA,
       formData,
-      onProgress
+      onProgress,
+      true
     );
   }
 
-  // MCQ Quiz generation (text only)
+  // MCQ Quiz generation (text only) (AUTH)
   async generateMCQQuiz(input: MCQQuizInput): Promise<MCQQuizOutput> {
     console.log('API Client - generateMCQQuiz input:', input);
     console.log('API Client - JSON body:', JSON.stringify(input));
@@ -258,11 +377,12 @@ class ApiClient {
       {
         method: 'POST',
         body: JSON.stringify(input),
-      }
+      },
+      true
     );
   }
 
-  // MCQ Quiz generation (multimedia)
+  // MCQ Quiz generation (multimedia) (AUTH)
   async generateMCQQuizMultimedia(
     audioFile?: File,
     videoFile?: File,
@@ -291,22 +411,24 @@ class ApiClient {
     return this.makeFileRequest<MCQQuizOutput>(
       API_ENDPOINTS.GENERATE_MCQ_QUIZ_MULTIMEDIA,
       formData,
-      onProgress
+      onProgress,
+      true
     );
   }
 
-  // Flashcard generation (text only)
+  // Flashcard generation (text only) (AUTH)
   async generateFlashcards(input: FlashcardInput): Promise<FlashcardOutput> {
     return this.makeRequest<FlashcardOutput>(
       API_ENDPOINTS.GENERATE_FLASHCARDS,
       {
         method: 'POST',
         body: JSON.stringify(input),
-      }
+      },
+      true
     );
   }
 
-  // Flashcard generation (multimedia)
+  // Flashcard generation (multimedia) (AUTH)
   async generateFlashcardsMultimedia(
     audioFile?: File,
     videoFile?: File,
@@ -341,7 +463,8 @@ class ApiClient {
     return this.makeFileRequest<FlashcardOutput>(
       API_ENDPOINTS.GENERATE_FLASHCARDS_MULTIMEDIA,
       formData,
-      onProgress
+      onProgress,
+      true
     );
   }
 

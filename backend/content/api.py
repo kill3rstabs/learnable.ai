@@ -8,6 +8,9 @@ import tempfile
 from typing import Dict, Any, List, Optional
 import json
 from pydantic import BaseModel
+from users.security import jwt_auth
+from users.services import debit_credits_for_usage
+from django.conf import settings
 
 from .utils import poll_for_transcript
 from core.gemini import GeminiService
@@ -92,6 +95,57 @@ def transcribe_audio(request, audio_file: UploadedFile = File(...)):
     
     
 
+    
+    
+
+
+
+
+
+class PromptIn(BaseModel):
+    """
+    Simple JSON payload to run Gemini.
+    """
+    prompt: str
+
+
+@router.post("/gemini-run", auth=jwt_auth)
+def run_gemini(request, payload: PromptIn):
+    """
+    Protected endpoint that runs Gemini and debits user credits based on usage.
+    - Requires Authorization: Bearer <access_token>
+    - Computes input/output tokens (if available) and charges accordingly.
+    - Enforces a minimum debit per call via settings.MIN_CREDIT_DEBIT_PER_CALL.
+    """
+    try:
+        # 1) Invoke Gemini with usage to measure tokens
+        content, usage = gemini_service.run_raw_with_usage(payload.prompt)
+
+        # 2) Extract input/output tokens using common keys
+        input_tokens = int(usage.get("input_tokens", 0) or usage.get("promptTokenCount", 0) or 0)
+        output_tokens = int(usage.get("output_tokens", 0) or usage.get("candidatesTokenCount", 0) or 0)
+
+        # 3) Debit credits based on usage (atomic)
+        debited = debit_credits_for_usage(
+            user=request.auth,
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
+            min_debit=settings.MIN_CREDIT_DEBIT_PER_CALL,
+        )
+
+        return {
+            "content": content,
+            "usage": {
+                "input_tokens": input_tokens,
+                "output_tokens": output_tokens,
+            },
+            "debited_credits": debited,
+        }
+    except ValueError as e:
+        # Insufficient credits or similar logical error
+        return 402, {"detail": str(e)}
+    except Exception as e:
+        return 500, {"detail": f"Failed to run model: {e}"}
     
     
 

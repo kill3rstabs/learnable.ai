@@ -7,24 +7,41 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import InputSection from "./components/InputSection";
 import Input from "./pages/Input";
+import ProtectedRoute from "@/components/ProtectedRoute";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import { useAuth } from "@/hooks/useAuth";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/input" element={<Input/>} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+const App = () => {
+  const { isAuthenticated, loading } = useAuth();
+  if (loading) return null;
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route
+              path="/input"
+              element={
+                <ProtectedRoute isAuthed={isAuthenticated}>
+                  <Input/>
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
