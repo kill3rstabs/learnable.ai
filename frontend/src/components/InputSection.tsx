@@ -22,6 +22,20 @@ import {
   Trash2,
   Plus
 } from "lucide-react";
+import { ArrowRight, Video, Headphones, Target, Menu,
+
+
+  Wand2,
+
+
+  Map,
+  
+  Share2,
+  Download,
+  Check,
+  Star,
+  Zap,
+  Heart, } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useApiKey } from "@/hooks/useApiKey";
 import FileUpload from "@/components/ui/file-upload";
@@ -195,56 +209,85 @@ const InputSection: React.FC<InputSectionProps> = ({
         return false;
     }
   };
-
+      const handleClearAll = () => {
+        clearFiles();                // Clear uploaded files
+        setTextInput("");            // Clear text input
+        setUrlInput("");             // Clear URL input
+        setActiveTab("summary");     // Optional: Reset to summary tab
+        // Optionally clear processing status if needed
+        // Reset results
+        if (results) {
+          results.summary = undefined;
+          results.mindmap = undefined;
+          results.quiz = undefined;
+          results.flashcards = undefined;
+        }
+      };
   return (
-    <section className="py-16 bg-muted/30">
+<section className="py-16 bg-emerald-50">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
+        <div className="text-center mb-12 ">
           <h2 className="text-3xl font-bold mb-4 text-foreground">Create Learning Resources</h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
             Upload your content and generate different types of learning materials on demand.
           </p>
+         < div className="text-center py-8">
+          <div className="inline-flex items-center gap-6 bg-card rounded-2xl p-6 shadow-card">
+            <div className="flex items-center gap-2">
+              <Video className="h-5 w-5 text-primary" />
+              <span className="text-sm font-medium">Video</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Headphones className="h-5 w-5 text-secondary" />
+              <span className="text-sm font-medium">Audio</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <FileText className="h-5 w-5 text-accent" />
+              <span className="text-sm font-medium">Text</span>
+            </div>
+          </div>
+        </div>
         </div>
 
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Left Side - File Upload & Input */}
-          <Card className="p-6 bg-card shadow-elevated border-0">
+          <Card className="p-6 shadow-xl border-0">
             <div className="mb-6">
-              <h3 className="text-xl font-bold mb-4 text-foreground">Input Content</h3>
+              <h3 className="text-xl font-bold mb-4 text-gray-700">Input Content</h3>
               
               {/* Input Method Tabs */}
               <Tabs value={inputMethod} onValueChange={(value) => setInputMethod(value as any)} className="w-full">
-                <TabsList className="grid w-full grid-cols-3 mb-6">
-                  <TabsTrigger value="text" className="flex items-center gap-2">
+                <TabsList className="grid w-full grid-cols-3 mb-6 bg-emerald-600">
+                  <TabsTrigger value="text" className=" mr-1 flex items-center gap-2 text-white focus:text-gray-700">
                     <Type className="h-4 w-4" />
-                    Text
+                    <div className="">Text</div>
                   </TabsTrigger>
-                  <TabsTrigger value="file" className="flex items-center gap-2">
+                  <TabsTrigger value="file" className="flex items-center gap-2 text-white">
                     <Upload className="h-4 w-4" />
                     Files
                   </TabsTrigger>
-                  <TabsTrigger value="url" className="flex items-center gap-2">
+                  <TabsTrigger value="url" className="ml-1 flex items-center gap-2 text-white">
                     <Link className="h-4 w-4" />
                     URL
                   </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="text" className="space-y-4">
-                  <Label htmlFor="text-input" className="text-base font-medium">
-                    Paste your content
+                  <Label htmlFor="text-input" className="text-gray-900 font-medium">
+                    
                   </Label>
                   <Textarea
                     id="text-input"
                     placeholder="Paste your text content, lecture notes, or any educational material here..."
                     value={textInput}
                     onChange={(e) => setTextInput(e.target.value)}
-                    className="min-h-[300px] text-base resize-none"
+                    className="min-h-[300px] text-gray-900 resize-none border-white"
                     disabled={isProcessing}
                   />
                 </TabsContent>
 
                 <TabsContent value="file" className="space-y-4">
-                  <Label className="text-base font-medium">Upload Files</Label>
+                  <Label className="text-base font-medium"></Label>
                   <FileUpload
                     uploadedFiles={uploadedFiles}
                     isDragOver={isDragOver}
@@ -256,13 +299,13 @@ const InputSection: React.FC<InputSectionProps> = ({
                     fileInputRef={fileInputRef}
                     onFileInputChange={handleFileInputChange}
                     acceptedTypes={SUPPORTED_FILE_TYPES.ALL}
-                    multiple={true}
+                    multiple={false}
                     disabled={isProcessing}
                   />
                 </TabsContent>
 
                 <TabsContent value="url" className="space-y-4">
-                  <Label htmlFor="url-input" className="text-base font-medium">
+                  <Label htmlFor="url-input" className="text-gray-600 font-medium">
                     Enter URL
                   </Label>
                   <Input
@@ -291,39 +334,56 @@ const InputSection: React.FC<InputSectionProps> = ({
           </Card>
 
           {/* Right Side - Content Generation */}
-          <Card className="p-6 bg-card shadow-elevated border-0">
+          <Card className="p-6 bg-card shadow-lg border-0">
             <div className="mb-6">
-              <h3 className="text-xl font-bold mb-4 text-foreground">Generate Content</h3>
+              <h3 className="text-xl font-bold mb-4 text-gray-700">Generate Content</h3>
               
               {/* Content Type Tabs */}
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-4 mb-6">
-                  <TabsTrigger value="summary" className="flex items-center gap-2">
+                <TabsList className="grid w-full grid-cols-4 mb-6 bg-emerald-600">
+                  <TabsTrigger value="summary" className="flex items-center gap-2 text-white">
                     <FileText className="h-4 w-4" />
-                    Summary
+                    <div className="text-sm mr-2">Summary</div>
                   </TabsTrigger>
-                  <TabsTrigger value="mindmap" className="flex items-center gap-2">
+                  <TabsTrigger value="mindmap" className="flex items-center gap-2 text-white">
                     <Brain className="h-4 w-4" />
-                    Mindmap
+                    <div className="text-sm mr-2">Mindmap</div>
                   </TabsTrigger>
-                  <TabsTrigger value="quiz" className="flex items-center gap-2">
+                  <TabsTrigger value="quiz" className="flex items-center gap-2 text-white">
                     <HelpCircle className="h-4 w-4" />
-                    Quiz
+                   <div className="text-sm mr-2">Quiz</div>
                   </TabsTrigger>
-                  <TabsTrigger value="flashcards" className="flex items-center gap-2">
-                    <BookOpen className="h-4 w-4" />
-                    Flashcards
+                  <TabsTrigger value="flashcards" className="flex items-center gap-2 text-white">
+                    <BookOpen className="h-4 w-4 " />
+                    <div className="text-sm mr-1">Flashcards</div>
                   </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="summary" className="space-y-4">
                   {hasResultsForTab() ? (
-                    <ResultsSection 
-                      results={results} 
-                      activeTab="summary" 
-                      onRegenerate={handleGenerateContent}
-                      isRegenerating={getLoadingState()}
-                    />
+                          <>
+                   <div className="space-y-4">
+  <ResultsSection 
+    results={results} 
+    activeTab="summary" 
+    onRegenerate={handleGenerateContent}
+    isRegenerating={getLoadingState()}
+  />
+
+  <div className="flex justify-end gap-2">
+    <Button variant="secondary" onClick={handleGenerateContent}>
+      <FileText className="h-4 w-4 mr-2" />
+      Regenerate
+    </Button>
+    <Button variant="outline" onClick={handleClearAll}>
+      <Trash2 className="h-4 w-4 mr-2" />
+      Clear All
+    </Button>
+  </div>
+</div>
+
+                  </>
+
                   ) : (
                     <div className="text-center p-8">
                       <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
@@ -332,11 +392,12 @@ const InputSection: React.FC<InputSectionProps> = ({
                         Create a concise summary of your content with key points and insights.
                       </p>
                       <Button
-                        variant="hero"
+                        
                         size="lg"
                         onClick={handleGenerateContent}
                         disabled={!hasApiKey || isProcessing || !hasContent() || getLoadingState()}
-                        className="w-full"
+                        className="px-6 py-2 w-full rounded text-white 
+                        bg-emerald-600"
                       >
                         {getLoadingState() ? (
                           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -365,11 +426,11 @@ const InputSection: React.FC<InputSectionProps> = ({
                         Visualize the main concepts and their relationships in your content.
                       </p>
                       <Button
-                        variant="hero"
+                       
                         size="lg"
                         onClick={handleGenerateContent}
                         disabled={!hasApiKey || isProcessing || !hasContent() || getLoadingState()}
-                        className="w-full"
+                        className="w-full bg-emerald-600 text-white"
                       >
                         {getLoadingState() ? (
                           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -398,11 +459,11 @@ const InputSection: React.FC<InputSectionProps> = ({
                         Test your knowledge with interactive multiple-choice questions.
                       </p>
                       <Button
-                        variant="hero"
+                       
                         size="lg"
                         onClick={handleGenerateContent}
                         disabled={!hasApiKey || isProcessing || !hasContent() || getLoadingState()}
-                        className="w-full"
+                        className="w-full bg-emerald-600 text-white"
                       >
                         {getLoadingState() ? (
                           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -431,11 +492,11 @@ const InputSection: React.FC<InputSectionProps> = ({
                         Build study cards with key terms and concepts for effective memorization.
                       </p>
                       <Button
-                        variant="hero"
+                        
                         size="lg"
                         onClick={handleGenerateContent}
                         disabled={!hasApiKey || isProcessing || !hasContent() || getLoadingState()}
-                        className="w-full"
+                        className="w-full bg-emerald-600 text-white"
                       >
                         {getLoadingState() ? (
                           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -453,12 +514,12 @@ const InputSection: React.FC<InputSectionProps> = ({
 
             {/* Processing Status */}
             {isProcessing && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="bg-emerald-50 border border-emerald-400 rounded-lg p-4">
                 <div className="flex items-center gap-3">
-                  <Loader2 className="h-5 w-5 text-blue-600 animate-spin" />
+                  <Loader2 className="h-5 w-5 text-emerald-600 animate-spin" />
                   <div>
-                    <p className="text-sm font-medium text-blue-800">Processing...</p>
-                    <p className="text-xs text-blue-600">{processingStatus.message}</p>
+                    <p className="text-sm font-medium text-emerald-800">Processing...</p>
+                    <p className="text-xs text-emerald-700">{processingStatus.message}</p>
                   </div>
                 </div>
               </div>

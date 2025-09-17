@@ -1,35 +1,74 @@
+// import "./ticker.css";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Brain, Sparkles } from "lucide-react";
-import SettingsModal from "./SettingsModal";
-import ApiKeyStatus from "./ApiKeyStatus";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+
 const Header = () => {
-  return <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-      <div className="container mx-auto px-4 py-4">
-        <div className="flex items-center justify-between">
+  const { pathname } = useLocation();
+  const navigate = useNavigate();
+  const isHome = pathname === "/";
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 6);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  return (
+    <header
+      className={[
+        "sticky top-0 z-50 border-b transition-all",
+        "bg-white/60 dark:bg-neutral-900/50 backdrop-blur-xl",
+        scrolled
+          ? "shadow-[0_8px_24px_rgba(2,6,23,0.08)] border-emerald-600/15"
+          : "shadow-none border-transparent",
+      ].join(" ")}
+    >
+      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-20">
+        <div className="flex h-14 sm:h-[60px] items-center justify-between">
+          {/* Brand */}
+          <Link to="/" className="flex items-center gap-2 group">
+            <img
+              src="/hopenote-logo.png"
+              alt="Hopnote"
+              className="h-8 w-10 md:h-8 md:w-10 object-contain transition-transform duration-200 group-hover:scale-[1.22]"
+            />
+            <div className="leading-none">
+              <img
+                src="/hopnote-text-logo.png"
+                alt="Hopnote"
+                className="h-6 w-auto object-contain mt-2"
+              />
+            </div>
+          </Link>
+
+          {/* Actions */}
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-gradient-primary rounded-lg shadow-md">
-              <Brain className="h-6 w-6 text-primary-foreground" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-foreground">Learnable.ai</h1>
-              <p className="text-sm text-muted-foreground">Transform content into learning resources</p>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-4">
-            <ApiKeyStatus />
-            <SettingsModal />
-            <Button variant="ghost" size="sm">
-              <BookOpen className="h-4 w-4" />
-              My Library
-            </Button>
-            <Button variant="hero" size="sm">
-              <Sparkles className="h-4 w-4" />
-              Get Started
-            </Button>
+            {isHome && (
+             <Button
+             size="sm"
+             onClick={() => navigate("/login")}
+             className="group relative inline-flex items-center justify-center rounded-3xl px-5
+                        bg-emerald-600 text-white font-normal hover:bg-emerald-600/95
+                        transition-colors duration-200 focus:outline-none animate-slide-in-right"
+           >
+             <span
+               className="buttonTicker select-none"
+               data-label="Get Started"
+             >
+               <span className="line">Get Started</span>
+             </span>
+           </Button>
+           
+            )}
           </div>
         </div>
       </div>
-    </header>;
+      <div className="pointer-events-none h-px w-full bg-gradient-to-r from-transparent via-emerald-600/30 to-transparent" />
+    </header>
+  );
 };
+
 export default Header;
