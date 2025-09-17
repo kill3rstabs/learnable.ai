@@ -48,8 +48,8 @@ export default function Login() {
           </div>
 
           <div className="text-center mb-6">
-            <h1 className="text-2xl font-semibold text-green-700">Sign in with email</h1>
-            <p className="mt-2 text-sm text-gray-600">Make a new doc to bring your words, data, and teams together. For free</p>
+            <h1 className="text-2xl font-semibold text-emerald-700">Welcome back to HopNote!</h1>
+            <p className="mt-2 text-sm text-gray-600">Login to bring your words, data, and teams together. For free</p>
           </div>
 
           <form onSubmit={onSubmit} className="space-y-4">
@@ -92,7 +92,7 @@ export default function Login() {
               </button>
             </div>
 
-            <Button type="submit" className="w-full h-11 rounded-full bg-green-500 hover:bg-green-600 text-white shadow-md" disabled={loading}>
+            <Button type="submit" className="w-full h-11 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white shadow-md" disabled={loading}>
               {loading ? 'Signing in…' : 'Get Started'}
             </Button>
 
@@ -100,7 +100,7 @@ export default function Login() {
 
             <div className="text-sm text-center text-gray-600">
               Don’t have an account?{' '}
-              <Link to="/register" className="text-green-600 hover:underline">Create one</Link>
+              <Link to="/register" className="text-emerald-600 hover:underline">Create one</Link>
             </div>
           </form>
         </Card>

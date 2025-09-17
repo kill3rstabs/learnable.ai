@@ -62,7 +62,7 @@ const HeroSection = () => {
             <span className="text-sm font-medium text-muted-foreground">Powered by Google Gemini AI</span>
           </div>
           
-          <h1 className="text-4xl md:text-6xl font-bold mb-6 text-green-600 ">
+          <h1 className="text-4xl md:text-6xl font-bold mb-6 text-emerald-600 ">
             Transform Any Content Into
             <br />
             <span className="text-foreground">Learning Resources</span>
@@ -76,7 +76,7 @@ const HeroSection = () => {
             
             <Button
               size="lg"
-              className="text-lg font-semibold text-white bg-green-500 rounded-3xl hover:bg-green-600"
+              className="text-lg font-semibold text-white bg-emerald-600 rounded-3xl hover:bg-emerald-500"
               onClick={onStart}
             >
               <span className="flex items-center gap-2">
@@ -85,7 +85,7 @@ const HeroSection = () => {
               </span>
             </Button>
 
-            <Button  size="lg" className="text-lg font-semibold hover:bg-green-500 hover:text-white text-green-600 border-green-500 rounded-3xl border-2 px-8">
+            <Button  size="lg" className="text-lg font-semibold hover:bg-emerald-600 hover:text-white text-emerald-600 border-emerald-600 rounded-3xl border-2 px-8">
               <Video className="h-5 w-5" />
               Watch Demo
             </Button>
@@ -101,46 +101,71 @@ const HeroSection = () => {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-3 gap-8 items-stretch">
             {[
               {
                 step: "01",
                 title: "Drop Content",
                 icon: Upload,
                 desc: "Upload video, audio, or text - we handle the rest!",
-                color: "bg-green-400",
+                chips: ["Video", "Audio", "Text"],
+                gradient: "from-emerald-200/70 via-green-100/60 to-lime-100/70",
+                iconBg: "bg-emerald-600"
               },
               {
                 step: "02",
                 title: "AI Transforms",
                 icon: Wand2,
                 desc: "Get flashcards, quizzes, and mind maps instantly",
-                color: "bg-green-500",
+                chips: ["Flashcards", "Quizzes", "Mindmaps"],
+                gradient: "from-green-200/70 via-emerald-100/60 to-teal-100/70",
+                iconBg: "bg-emerald-600"
               },
               {
                 step: "03",
                 title: "You Study",
                 icon: BookOpen,
                 desc: "Use your favorite learning format and ace those tests",
-                color: "bg-green-600",
+                chips: ["Spaced", "Practice", "Review"],
+                gradient: "from-teal-200/70 via-cyan-100/60 to-emerald-100/70",
+                iconBg: "bg-emerald-600"
               },
             ].map((item, index) => (
-              <Card
-                key={index}
-                className={`relative p-6 border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2 fade-in-on-scroll cursor-pointer 
-                }`}
-                
-                style={{ animationDelay: `${index * 0.2}s` }}
-              >
-                <div className="text-center">
-                  <div className={`w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center ${item.color}`}>
-                    <item.icon className="w-8 h-8 text-white" />
+              <div key={index} className="group relative h-full">
+                {/* gradient border wrapper */}
+                <div className={`rounded-2xl p-[1px] bg-gradient-to-br ${item.gradient} shadow-[0_10px_30px_-10px_rgba(16,185,129,0.35)] h-full transition-all duration-300 group-hover:-translate-y-2 group-hover:-rotate-1 group-hover:shadow-[0_20px_60px_-20px_rgba(16,185,129,0.45)]`}>
+                  <div className="rounded-2xl bg-white/90 backdrop-blur-sm h-full flex flex-col transition-shadow duration-300 group-hover:shadow-lg">
+                    {/* card body */}
+                    <div className="p-6 md:p-7 flex-1">
+                      <div className="flex items-start gap-4">
+                        <div className={`w-14 h-14 rounded-full ${item.iconBg} flex items-center justify-center text-white shadow-md transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3`}> 
+                          <item.icon className="w-7 h-7" />
+                        </div>
+                        <div>
+                          <div className="text-[11px] font-bold tracking-widest text-emerald-600/70">{item.step}</div>
+                          <h3 className="text-xl font-bold text-[#1B1B1B] mt-1 transition-colors duration-300 group-hover:text-emerald-700">{item.title}</h3>
+                        </div>
+                      </div>
+                      <p className="text-gray-600 mt-4 text-sm">{item.desc}</p>
+
+                      {/* chips */}
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        {item.chips.map((chip, cIdx) => (
+                          <span key={cIdx} className="text-[10px] px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 transform transition-all duration-300 opacity-80 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0" style={{ transitionDelay: `${cIdx * 60}ms` }}>
+                            {chip}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* footer ribbon */}
+                    <div className="px-6 py-3 rounded-b-2xl bg-gradient-to-r from-emerald-50 to-green-50 text-[10px] tracking-wider text-gray-500 uppercase transition-colors duration-300 group-hover:from-emerald-100 group-hover:to-green-100">
+                      Simple • Fast • Effective
+                    </div>
                   </div>
-                  <div className="text-sm font-bold text-gray-400 mb-2">{item.step}</div>
-                  <h3 className="text-xl font-bold text-[#1B1B1B] mb-3">{item.title}</h3>
-                  <p className="text-gray-600">{item.desc}</p>
                 </div>
-              </Card>
+
+              </div>
             ))}
           </div>
         </div>
@@ -235,8 +260,8 @@ const HeroSection = () => {
         </div>
       </section>
       
-      
-      
+
+
 
           
         
@@ -253,13 +278,13 @@ const HeroSection = () => {
         Join thousands of students who are already learning smarter with Hopnote. Your future self will thank you! 🎓
       </p>
       <div className="flex flex-col sm:flex-row gap-4 justify-center">
-        <Button size="lg" className="bg-green-500 hover:bg-green-600 text-white text-lg px-8 py-3 rounded-full">
+        <Button size="lg" className="bg-emerald-600 hover:bg-emerald-500 text-white text-lg px-8 py-3 rounded-full">
           Start Your Journey <Heart className="w-5 h-5 ml-2" />
         </Button>
         <Button
           size="lg"
           variant="outline"
-          className="border-2 border-green-500 text-green-600 hover:bg-green-500 hover:text-white text-lg px-8 py-3 rounded-full bg-transparent"
+          className="border-2 border-emerald-600 text-emerald-600 hover:bg-emerald-600 hover:text-white text-lg px-8 py-3 rounded-full bg-transparent"
         >
           Learn More
         </Button>
@@ -272,9 +297,7 @@ const HeroSection = () => {
           <div className="grid md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center space-x-2 mb-4">
-                <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">H</span>
-                </div>
+                <img src="/hopenote-logo.png" alt="Hopnote" className="w-8 h-8 rounded-full object-contain" />
                 <span className="text-xl font-bold">Hopnote</span>
               </div>
               <p className="text-gray-400 text-sm">

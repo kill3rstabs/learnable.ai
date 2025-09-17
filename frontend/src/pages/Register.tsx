@@ -98,13 +98,13 @@ export default function Register() {
               </button>
             </div>
 
-            <Button type="submit" className="w-full h-11 rounded-full bg-green-500 hover:bg-green-600 text-white shadow-md" disabled={loading}>
+            <Button type="submit" className="w-full h-11 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white shadow-md" disabled={loading}>
               {loading ? 'Creating account…' : 'Create Account'}
             </Button>
 
             <div className="text-sm text-center text-gray-600">
               Already have an account?{' '}
-              <Link to="/login" className="text-green-600 hover:underline">Sign in</Link>
+              <Link to="/login" className="text-emerald-600 hover:underline">Sign in</Link>
             </div>
           </form>
         </Card>
