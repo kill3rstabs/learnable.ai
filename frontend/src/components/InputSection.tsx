@@ -224,7 +224,7 @@ const InputSection: React.FC<InputSectionProps> = ({
         }
       };
   return (
-<section className="py-16 bg-green-50">
+<section className="py-16 bg-emerald-50">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12 ">
           <h2 className="text-3xl font-bold mb-4 text-foreground">Create Learning Resources</h2>
@@ -257,7 +257,7 @@ const InputSection: React.FC<InputSectionProps> = ({
               
               {/* Input Method Tabs */}
               <Tabs value={inputMethod} onValueChange={(value) => setInputMethod(value as any)} className="w-full">
-                <TabsList className="grid w-full grid-cols-3 mb-6 bg-green-500">
+                <TabsList className="grid w-full grid-cols-3 mb-6 bg-emerald-600">
                   <TabsTrigger value="text" className=" mr-1 flex items-center gap-2 text-white focus:text-gray-700">
                     <Type className="h-4 w-4" />
                     <div className="">Text</div>
@@ -340,22 +340,22 @@ const InputSection: React.FC<InputSectionProps> = ({
               
               {/* Content Type Tabs */}
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                <TabsList className="grid w-full grid-cols-4 mb-6 bg-green-600">
-                  <TabsTrigger value="summary" className="flex items-center gap-2  text-white">
+                <TabsList className="grid w-full grid-cols-4 mb-6 bg-emerald-600">
+                  <TabsTrigger value="summary" className="flex items-center gap-2 text-white">
                     <FileText className="h-4 w-4" />
-                    Summary
+                    <div className="text-sm mr-2">Summary</div>
                   </TabsTrigger>
                   <TabsTrigger value="mindmap" className="flex items-center gap-2 text-white">
                     <Brain className="h-4 w-4" />
-                    Mindmap
+                    <div className="text-sm mr-2">Mindmap</div>
                   </TabsTrigger>
                   <TabsTrigger value="quiz" className="flex items-center gap-2 text-white">
                     <HelpCircle className="h-4 w-4" />
-                    Quiz
+                   <div className="text-sm mr-2">Quiz</div>
                   </TabsTrigger>
                   <TabsTrigger value="flashcards" className="flex items-center gap-2 text-white">
-                    <BookOpen className="h-4 w-4" />
-                    Flashcards
+                    <BookOpen className="h-4 w-4 " />
+                    <div className="text-sm mr-1">Flashcards</div>
                   </TabsTrigger>
                 </TabsList>
 
@@ -396,8 +396,8 @@ const InputSection: React.FC<InputSectionProps> = ({
                         size="lg"
                         onClick={handleGenerateContent}
                         disabled={!hasApiKey || isProcessing || !hasContent() || getLoadingState()}
-                        className="px-6 py-2 rounded text-white 
-                        bg-gradient-to-r from-green-500 to-green-400"
+                        className="px-6 py-2 w-full rounded text-white 
+                        bg-emerald-600"
                       >
                         {getLoadingState() ? (
                           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -426,11 +426,11 @@ const InputSection: React.FC<InputSectionProps> = ({
                         Visualize the main concepts and their relationships in your content.
                       </p>
                       <Button
-                        variant="hero"
+                       
                         size="lg"
                         onClick={handleGenerateContent}
                         disabled={!hasApiKey || isProcessing || !hasContent() || getLoadingState()}
-                        className="w-full"
+                        className="w-full bg-emerald-600 text-white"
                       >
                         {getLoadingState() ? (
                           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -459,11 +459,11 @@ const InputSection: React.FC<InputSectionProps> = ({
                         Test your knowledge with interactive multiple-choice questions.
                       </p>
                       <Button
-                        variant="hero"
+                       
                         size="lg"
                         onClick={handleGenerateContent}
                         disabled={!hasApiKey || isProcessing || !hasContent() || getLoadingState()}
-                        className="w-full"
+                        className="w-full bg-emerald-600 text-white"
                       >
                         {getLoadingState() ? (
                           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -492,11 +492,11 @@ const InputSection: React.FC<InputSectionProps> = ({
                         Build study cards with key terms and concepts for effective memorization.
                       </p>
                       <Button
-                        variant="hero"
+                        
                         size="lg"
                         onClick={handleGenerateContent}
                         disabled={!hasApiKey || isProcessing || !hasContent() || getLoadingState()}
-                        className="w-full"
+                        className="w-full bg-emerald-600 text-white"
                       >
                         {getLoadingState() ? (
                           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
