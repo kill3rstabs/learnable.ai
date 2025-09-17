@@ -2,9 +2,10 @@ import { Button } from "@/components/ui/button";
 import { BookOpen, Brain, Sparkles } from "lucide-react";
 import SettingsModal from "./SettingsModal";
 import ApiKeyStatus from "./ApiKeyStatus";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 const Header = () => {
   const { pathname } = useLocation();
+  const navigate = useNavigate();
   const isHome = pathname === "/";
   return <header className="border-b bg-card/50 sticky top-0 z-50">
       <div className="container mx-auto px-4 sm:px-6 lg:px-20 py-3">
@@ -25,7 +26,11 @@ const Header = () => {
               My Library
             </Button> */}
             {isHome && (
-              <Button className="bg-emerald-600 text-white font-normal rounded-3xl px-5 hover:bg-emerald-600 hidden sm:inline-flex" size="sm">
+              <Button
+                className="bg-emerald-600 text-white font-normal rounded-3xl px-5 hover:bg-emerald-600 inline-flex"
+                size="sm"
+                onClick={() => navigate('/login')}
+              >
                 Get Started
               </Button>
             )}
